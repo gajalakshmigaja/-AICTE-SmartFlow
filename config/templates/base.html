@@ -1,0 +1,1144 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}AICTE SmartFlow | Automated Approval Workflow{% endblock %}</title>
+
+  <!-- Google Fonts: Inter & Bootstrap 5 & Bootstrap Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+  <!-- Immediate Theme Initializer (Anti-flicker) -->
+  <script>
+    (function() {
+      const savedTheme = localStorage.getItem('sf_theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      document.documentElement.setAttribute('data-bs-theme', savedTheme);
+    })();
+  </script>
+
+  <style>
+    :root {
+      --sf-navy-900: #0a1f38;
+      --sf-navy-800: #0f2e4a;
+      --sf-navy-700: #143d63;
+      --sf-primary: #0b3b60;
+      --sf-primary-hover: #082842;
+      --sf-accent-blue: #0284c7;
+      --sf-accent-light: #eff6ff;
+      --sf-bg: #f8fafc;
+      --sf-surface: #ffffff;
+      --sf-border: #e2e8f0;
+      --sf-border-subtle: #f1f5f9;
+      --sf-text-main: #0f172a;
+      --sf-text-muted: #64748b;
+      --sf-text-light: #94a3b8;
+      --sf-sidebar-width: 260px;
+      --sf-sidebar-collapsed-width: 74px;
+      --sf-topbar-height: 64px;
+      --sf-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+      --sf-shadow: 0 1px 3px 0 rgba(15, 23, 42, 0.06), 0 1px 2px -1px rgba(15, 23, 42, 0.04);
+      --sf-shadow-md: 0 4px 6px -1px rgba(15, 23, 42, 0.07), 0 2px 4px -2px rgba(15, 23, 42, 0.04);
+      --sf-shadow-lg: 0 10px 15px -3px rgba(15, 23, 42, 0.08), 0 4px 6px -4px rgba(15, 23, 42, 0.03);
+    }
+
+    /* Dark Theme Variables & Component Rules */
+    [data-bs-theme="dark"] {
+      --sf-navy-900: #f8fafc;
+      --sf-navy-800: #1e293b;
+      --sf-navy-700: #334155;
+      --sf-primary: #2563eb;
+      --sf-primary-hover: #3b82f6;
+      --sf-accent-blue: #38bdf8;
+      --sf-accent-light: rgba(56, 189, 248, 0.12);
+      --sf-bg: #0b1329;
+      --sf-surface: #111c38;
+      --sf-border: #1e293b;
+      --sf-border-subtle: #192545;
+      --sf-text-main: #f8fafc;
+      --sf-text-muted: #94a3b8;
+      --sf-text-light: #64748b;
+      --sf-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.4);
+      --sf-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.4);
+      --sf-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
+      --sf-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.6);
+    }
+
+    [data-bs-theme="dark"] body {
+      background-color: var(--sf-bg);
+      color: var(--sf-text-main);
+    }
+
+    [data-bs-theme="dark"] .gov-disclaimer-bar {
+      background: #050a17;
+      border-color: rgba(255, 255, 255, 0.05);
+      color: #64748b;
+    }
+
+    [data-bs-theme="dark"] .sidebar-footer {
+      background: #0d152a;
+      border-color: var(--sf-border);
+    }
+
+    [data-bs-theme="dark"] .app-sidebar .nav-link {
+      color: #94a3b8;
+    }
+
+    [data-bs-theme="dark"] .app-sidebar .nav-link:hover {
+      color: #ffffff;
+      background-color: #172445;
+    }
+
+    [data-bs-theme="dark"] .app-sidebar .nav-link.active {
+      color: #38bdf8;
+      background-color: rgba(56, 189, 248, 0.12);
+    }
+
+    [data-bs-theme="dark"] .app-sidebar .nav-link.active i {
+      color: #38bdf8;
+    }
+
+    [data-bs-theme="dark"] .nav-toggle-btn {
+      background: #111c38;
+      border-color: var(--sf-border);
+      color: #f1f5f9;
+    }
+
+    [data-bs-theme="dark"] .nav-toggle-btn:hover {
+      background: #172445;
+      color: #38bdf8;
+    }
+
+    [data-bs-theme="dark"] .user-profile-btn {
+      background: #111c38;
+      border-color: var(--sf-border);
+    }
+
+    [data-bs-theme="dark"] .user-profile-btn:hover {
+      background: #172445;
+    }
+
+    [data-bs-theme="dark"] .text-dark {
+      color: #f8fafc !important;
+    }
+
+    [data-bs-theme="dark"] .bg-white {
+      background-color: var(--sf-surface) !important;
+    }
+
+    [data-bs-theme="dark"] .bg-light {
+      background-color: #152244 !important;
+      color: #cbd5e1 !important;
+    }
+
+    [data-bs-theme="dark"] .border {
+      border-color: var(--sf-border) !important;
+    }
+
+    [data-bs-theme="dark"] .border-bottom {
+      border-color: var(--sf-border) !important;
+    }
+
+    [data-bs-theme="dark"] .border-top {
+      border-color: var(--sf-border) !important;
+    }
+
+    [data-bs-theme="dark"] .chat-bubble-bot {
+      background: #152244;
+      color: #f1f5f9;
+      border-color: var(--sf-border);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: var(--sf-bg);
+      color: var(--sf-text-main);
+      min-height: 100vh;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Top Government Advisory Banner */
+    .gov-disclaimer-bar {
+      background: #08243b;
+      color: #94a3b8;
+      font-size: 0.76rem;
+      padding: 5px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      z-index: 1030;
+    }
+
+    /* Public Header */
+    .public-navbar {
+      background: var(--sf-navy-800);
+      box-shadow: 0 2px 10px rgba(0,0,0,0.12);
+      padding: 12px 24px;
+    }
+
+    /* Master Layout */
+    .app-layout {
+      display: flex;
+      flex: 1;
+      position: relative;
+      min-height: calc(100vh - 31px);
+    }
+
+    .app-layout.public-layout {
+      min-height: auto;
+    }
+
+    /* Mobile Backdrop */
+    .sidebar-backdrop {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(15, 23, 42, 0.45);
+      backdrop-filter: blur(2px);
+      z-index: 1040;
+      opacity: 0;
+      transition: opacity 0.2s ease-in-out;
+    }
+
+    /* Sidebar Navigation */
+    .app-sidebar {
+      width: var(--sf-sidebar-width);
+      background: var(--sf-surface);
+      border-right: 1px solid var(--sf-border);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+      transition: width 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      z-index: 1045;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-x: hidden;
+      overflow-y: auto;
+    }
+
+    /* Sidebar Brand Header */
+    .sidebar-brand-header {
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--sf-border);
+      min-height: 64px;
+    }
+
+    .brand-link {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+      color: var(--sf-navy-900);
+    }
+
+    .brand-logo-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 9px;
+      background: linear-gradient(135deg, var(--sf-navy-800), var(--sf-accent-blue));
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.15rem;
+      flex-shrink: 0;
+      box-shadow: 0 4px 10px rgba(2, 132, 199, 0.25);
+    }
+
+    .brand-info {
+      display: flex;
+      flex-direction: column;
+      white-space: nowrap;
+      overflow: hidden;
+      transition: opacity 0.15s ease-in-out;
+    }
+
+    .brand-name {
+      font-weight: 700;
+      font-size: 1rem;
+      letter-spacing: -0.3px;
+      color: var(--sf-navy-900);
+      line-height: 1.2;
+    }
+
+    .brand-tag {
+      font-size: 0.65rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--sf-accent-blue);
+    }
+
+    /* Sidebar Navigation Links */
+    .sidebar-nav {
+      padding: 16px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      flex: 1;
+    }
+
+    .sidebar-section-title {
+      font-size: 0.70rem;
+      text-transform: uppercase;
+      font-weight: 700;
+      color: var(--sf-text-light);
+      padding: 14px 12px 6px 12px;
+      letter-spacing: 0.6px;
+      white-space: nowrap;
+      transition: opacity 0.15s;
+    }
+
+    .app-sidebar .nav-link {
+      color: var(--sf-slate-700);
+      font-weight: 500;
+      font-size: 0.88rem;
+      padding: 9px 12px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      transition: all 0.15s ease-in-out;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+
+    .app-sidebar .nav-link i {
+      font-size: 1.15rem;
+      width: 22px;
+      text-align: center;
+      color: var(--sf-text-muted);
+      flex-shrink: 0;
+      transition: color 0.15s;
+    }
+
+    .app-sidebar .nav-link:hover {
+      color: var(--sf-navy-900);
+      background-color: var(--sf-slate-100);
+    }
+
+    .app-sidebar .nav-link:hover i {
+      color: var(--sf-accent-blue);
+    }
+
+    .app-sidebar .nav-link.active {
+      color: var(--sf-primary);
+      background-color: #eef6ff;
+      font-weight: 600;
+    }
+
+    .app-sidebar .nav-link.active i {
+      color: var(--sf-accent-blue);
+    }
+
+    /* Sidebar Footer */
+    .sidebar-footer {
+      padding: 12px 16px;
+      border-top: 1px solid var(--sf-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--sf-slate-50);
+    }
+
+    .sidebar-collapse-btn {
+      background: none;
+      border: 1px solid var(--sf-border);
+      border-radius: 6px;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--sf-text-muted);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .sidebar-collapse-btn:hover {
+      background: #ffffff;
+      color: var(--sf-navy-900);
+      border-color: var(--sf-slate-300);
+    }
+
+    /* Desktop Collapsed Sidebar State */
+    body.sidebar-collapsed .app-sidebar {
+      width: var(--sf-sidebar-collapsed-width);
+    }
+
+    body.sidebar-collapsed .brand-info,
+    body.sidebar-collapsed .sidebar-section-title,
+    body.sidebar-collapsed .nav-text,
+    body.sidebar-collapsed .nav-badge,
+    body.sidebar-collapsed .sidebar-footer-text {
+      display: none !important;
+    }
+
+    body.sidebar-collapsed .app-sidebar .nav-link {
+      justify-content: center;
+      padding: 10px 0;
+    }
+
+    body.sidebar-collapsed .brand-link {
+      justify-content: center;
+    }
+
+    body.sidebar-collapsed .sidebar-footer {
+      justify-content: center;
+    }
+
+    /* Main Content Wrapper */
+    .app-main-wrapper {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      background-color: var(--sf-bg);
+    }
+
+    /* Top Navigation Bar */
+    .top-navbar {
+      height: var(--sf-topbar-height);
+      background: var(--sf-surface);
+      border-bottom: 1px solid var(--sf-border);
+      padding: 0 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 1020;
+    }
+
+    .top-navbar-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      min-width: 0;
+    }
+
+    .top-navbar-right {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    /* Mobile Hamburger & Desktop Toggle */
+    .nav-toggle-btn {
+      background: var(--sf-slate-50);
+      border: 1px solid var(--sf-border);
+      border-radius: 8px;
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--sf-slate-700);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .nav-toggle-btn:hover {
+      background: var(--sf-slate-100);
+      color: var(--sf-navy-900);
+    }
+
+    /* User Profile Pill */
+    .user-profile-btn {
+      border: 1px solid var(--sf-border);
+      background: #ffffff;
+      border-radius: 40px;
+      padding: 5px 12px 5px 6px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .user-profile-btn:hover {
+      background: var(--sf-slate-50);
+      border-color: var(--sf-slate-300);
+    }
+
+    .user-avatar-circle {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--sf-navy-800), var(--sf-accent-blue));
+      color: white;
+      font-size: 0.82rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-transform: uppercase;
+    }
+
+    .role-tag-badge {
+      font-size: 0.65rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      padding: 2px 7px;
+      border-radius: 12px;
+      background: #e2e8f0;
+      color: var(--sf-slate-700);
+    }
+
+    .role-tag-badge.role-OFFICER {
+      background: #e0f2fe;
+      color: #0369a1;
+    }
+
+    .role-tag-badge.role-DIRECTOR {
+      background: #dcfce7;
+      color: #15803d;
+    }
+
+    .role-tag-badge.role-INSTITUTION {
+      background: #fef3c7;
+      color: #92400e;
+    }
+
+    /* Content Area */
+    .app-content {
+      flex: 1;
+      padding: 28px 32px;
+      max-width: 1600px;
+      width: 100%;
+      margin: 0 auto;
+    }
+
+    /* Status Badges */
+    .badge-status {
+      font-size: 0.74rem;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 20px;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border: 1px solid transparent;
+    }
+    .status-DRAFT { background-color: #f1f5f9; border-color: #cbd5e1; color: #475569; }
+    .status-SUBMITTED { background-color: #eff6ff; border-color: #bfdbfe; color: #1d4ed8; }
+    .status-IN_SCRUTINY { background-color: #eef2ff; border-color: #c7d2fe; color: #4338ca; }
+    .status-DEFICIENCY_FLAGGED { background-color: #fffbeb; border-color: #fde68a; color: #b45309; }
+    .status-APPROVED { background-color: #f0fdf4; border-color: #bbf7d0; color: #15803d; }
+    .status-REJECTED { background-color: #fef2f2; border-color: #fecaca; color: #b91c1c; }
+
+    /* Floating Chatbot Button */
+    .btn-chatbot-float {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: linear-gradient(135deg, var(--sf-navy-800), var(--sf-accent-blue));
+      color: white;
+      border: none;
+      border-radius: 50px;
+      padding: 10px 20px;
+      box-shadow: 0 8px 20px rgba(2, 132, 199, 0.35);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 600;
+      font-size: 0.88rem;
+      z-index: 1035;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-chatbot-float:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 24px rgba(2, 132, 199, 0.45);
+      color: white;
+    }
+
+    /* Chatbot Dialog Elements */
+    .chat-bubble-user {
+      background: var(--sf-accent-blue);
+      color: white;
+      border-radius: 14px 14px 2px 14px;
+      padding: 10px 14px;
+      margin-left: auto;
+      max-width: 80%;
+      font-size: 0.88rem;
+    }
+    .chat-bubble-bot {
+      background: #f1f5f9;
+      color: #1e293b;
+      border-radius: 14px 14px 14px 2px;
+      padding: 12px 16px;
+      max-width: 85%;
+      font-size: 0.88rem;
+      border: 1px solid #e2e8f0;
+    }
+
+    /* Responsive Mobile Nav Drawer */
+    @media (max-width: 991.98px) {
+      .app-sidebar {
+        position: fixed;
+        top: 0;
+        left: calc(-1 * var(--sf-sidebar-width));
+        bottom: 0;
+        width: var(--sf-sidebar-width) !important;
+        box-shadow: 4px 0 24px rgba(0,0,0,0.18);
+        transition: left 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+
+      body.mobile-nav-open .app-sidebar {
+        left: 0;
+      }
+
+      body.mobile-nav-open .sidebar-backdrop {
+        display: block;
+        opacity: 1;
+      }
+
+      .app-content {
+        padding: 18px 16px;
+      }
+
+      .top-navbar {
+        padding: 0 16px;
+      }
+    }
+  </style>
+  {% block extra_head %}{% endblock %}
+</head>
+<body>
+
+  <!-- Top Government Advisory Banner -->
+  <div class="gov-disclaimer-bar">
+    <div class="d-flex align-items-center gap-2">
+      <i class="bi bi-shield-check text-info"></i>
+      <span><strong>AICTE SmartFlow</strong> &bull; Official Institutional Workflow & Compliance Automation System</span>
+    </div>
+    <div class="d-none d-md-flex align-items-center gap-3">
+      <span>SIH26262 Prototype</span>
+      <span class="text-white-50">&bull;</span>
+      <span>Turnaround SLA: 7 Business Days</span>
+    </div>
+  </div>
+
+  {% if not user.is_authenticated %}
+    <!-- Public Header for Login & Registration -->
+    <nav class="public-navbar">
+      <div class="container d-flex align-items-center justify-content-between">
+        <a class="navbar-brand text-white fw-bold d-flex align-items-center gap-2 text-decoration-none" href="{% url 'dashboard' %}">
+          <div class="brand-logo-icon" style="width: 32px; height: 32px; font-size: 1rem;">
+            <i class="bi bi-mortarboard-fill"></i>
+          </div>
+          <span>AICTE SmartFlow</span>
+        </a>
+        <div class="d-flex align-items-center gap-2">
+          <!-- Public Theme Toggle -->
+          <button type="button" class="btn btn-outline-light btn-sm px-2.5" id="publicThemeToggleBtn" title="Toggle Light / Dark Mode" aria-label="Toggle Theme">
+            <i class="bi bi-moon-stars" id="publicThemeIcon"></i>
+          </button>
+          <a href="{% url 'login' %}" class="btn btn-outline-light btn-sm px-3">Login</a>
+          <a href="{% url 'register' %}" class="btn btn-warning btn-sm px-3 fw-semibold">Register Institution</a>
+        </div>
+      </div>
+    </nav>
+  {% endif %}
+
+  <!-- Master App Layout -->
+  <div class="app-layout {% if not user.is_authenticated %}public-layout{% endif %}">
+    {% if user.is_authenticated %}
+      <!-- Mobile Backdrop Overlay -->
+      <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
+      <!-- Left Sidebar Navigation -->
+      <aside class="app-sidebar" id="appSidebar">
+        <!-- Brand Header -->
+        <div class="sidebar-brand-header">
+          <a class="brand-link" href="{% url 'dashboard' %}">
+            <div class="brand-logo-icon">
+              <i class="bi bi-mortarboard-fill"></i>
+            </div>
+            <div class="brand-info">
+              <span class="brand-name">AICTE SmartFlow</span>
+              <span class="brand-tag">Approval Portal</span>
+            </div>
+          </a>
+          <!-- Mobile Close Button -->
+          <button type="button" class="btn btn-sm btn-light d-lg-none p-1 text-muted" id="sidebarMobileClose" aria-label="Close Sidebar">
+            <i class="bi bi-x-lg fs-5"></i>
+          </button>
+        </div>
+
+        <!-- Navigation Links -->
+        <nav class="sidebar-nav">
+          <div class="sidebar-section-title">Main Navigation</div>
+          <a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}" href="{% url 'dashboard' %}" title="Dashboard">
+            <i class="bi bi-grid-1x2"></i>
+            <span class="nav-text">Dashboard</span>
+          </a>
+
+          {% if user.profile.is_institution or not user.profile.role or user.is_superuser %}
+            <a class="nav-link {% if request.resolver_match.url_name == 'create_application' %}active{% endif %}" href="{% url 'create_application' %}" title="New Application">
+              <i class="bi bi-plus-circle text-primary"></i>
+              <span class="nav-text">New Application</span>
+            </a>
+            <div class="sidebar-section-title">Institution Master</div>
+            <a class="nav-link {% if request.resolver_match.url_name == 'institution_profile' %}active{% endif %}" href="{% url 'institution_profile' %}" title="Campus & Infrastructure">
+              <i class="bi bi-building"></i>
+              <span class="nav-text">Campus & Infrastructure</span>
+            </a>
+            <a class="nav-link {% if request.resolver_match.url_name == 'manage_courses' %}active{% endif %}" href="{% url 'manage_courses' %}" title="Programmes & Intake">
+              <i class="bi bi-mortarboard"></i>
+              <span class="nav-text">Programmes & Intake</span>
+            </a>
+            <a class="nav-link {% if request.resolver_match.url_name == 'manage_faculty' %}active{% endif %}" href="{% url 'manage_faculty' %}" title="Faculty Register">
+              <i class="bi bi-people"></i>
+              <span class="nav-text">Faculty Register</span>
+            </a>
+          {% endif %}
+
+          {% if user.profile.is_scrutiny_officer or user.is_superuser %}
+            <div class="sidebar-section-title">Regulatory Scrutiny</div>
+            <a class="nav-link {% if request.resolver_match.url_name == 'officer_dashboard' or request.resolver_match.url_name == 'officer_review' %}active{% endif %}" href="{% url 'officer_dashboard' %}" title="Scrutiny Desk">
+              <i class="bi bi-clipboard2-check"></i>
+              <span class="nav-text">Scrutiny Desk</span>
+            </a>
+          {% endif %}
+
+          {% if user.profile.is_regional_director or user.profile.is_admin_role or user.is_superuser %}
+            <div class="sidebar-section-title">Executive & Admin</div>
+            <a class="nav-link {% if request.resolver_match.url_name == 'director_dashboard' %}active{% endif %}" href="{% url 'director_dashboard' %}" title="Director Analytics">
+              <i class="bi bi-bar-chart-line"></i>
+              <span class="nav-text">Director Analytics</span>
+            </a>
+            <a class="nav-link {% if request.resolver_match.url_name == 'compliance_rules' or request.resolver_match.url_name == 'rule_edit' %}active{% endif %}" href="{% url 'compliance_rules' %}" title="Handbook Rules">
+              <i class="bi bi-sliders"></i>
+              <span class="nav-text">Handbook Rules</span>
+            </a>
+            <a class="nav-link {% if request.resolver_match.url_name == 'audit_log_list' %}active{% endif %}" href="{% url 'audit_log_list' %}" title="Audit Trail">
+              <i class="bi bi-shield-shaded"></i>
+              <span class="nav-text">Audit Trail</span>
+            </a>
+          {% endif %}
+
+          <div class="sidebar-section-title">Support & Alerts</div>
+          <a class="nav-link {% if request.resolver_match.url_name == 'notifications_list' %}active{% endif %}" href="{% url 'notifications_list' %}" title="Notifications">
+            <i class="bi bi-bell"></i>
+            <span class="nav-text">Notifications</span>
+            {% if unread_notifications_count > 0 %}
+              <span class="badge bg-danger rounded-pill ms-auto nav-badge">{{ unread_notifications_count }}</span>
+            {% endif %}
+          </a>
+          <a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#chatbotModal" title="Help Desk & FAQ">
+            <i class="bi bi-question-circle"></i>
+            <span class="nav-text">Help Desk & FAQ</span>
+          </a>
+        </nav>
+
+        <!-- Sidebar Footer Toggle -->
+        <div class="sidebar-footer">
+          <div class="sidebar-footer-text small text-muted">
+            <i class="bi bi-shield-check text-success me-1"></i>Secure Session
+          </div>
+          <button type="button" class="sidebar-collapse-btn d-none d-lg-flex" id="sidebarCollapseBtn" title="Toggle Sidebar">
+            <i class="bi bi-chevron-double-left" id="collapseIcon"></i>
+          </button>
+        </div>
+      </aside>
+    {% endif %}
+
+    <!-- Main Content Wrapper -->
+    <div class="app-main-wrapper">
+      {% if user.is_authenticated %}
+        <!-- Top Navigation Bar -->
+        <header class="top-navbar">
+          <!-- Left: Toggle & Breadcrumb -->
+          <div class="top-navbar-left">
+            <!-- Mobile Drawer Button -->
+            <button type="button" class="nav-toggle-btn d-lg-none" id="sidebarMobileToggle" aria-label="Toggle Mobile Menu">
+              <i class="bi bi-list fs-5"></i>
+            </button>
+            <!-- Desktop Collapse Button -->
+            <button type="button" class="nav-toggle-btn d-none d-lg-flex" id="sidebarDesktopToggle" aria-label="Collapse Sidebar" title="Collapse Sidebar">
+              <i class="bi bi-layout-sidebar-inset"></i>
+            </button>
+
+            <!-- Breadcrumbs / Page Title Context -->
+            <div class="d-none d-sm-block">
+              {% block breadcrumbs %}
+                <nav aria-label="breadcrumb">
+                  <ol class="breadcrumb mb-0 small">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard' %}" class="text-decoration-none text-muted">Portal</a></li>
+                    <li class="breadcrumb-item active text-dark fw-semibold" aria-current="page">Dashboard</li>
+                  </ol>
+                </nav>
+              {% endblock %}
+            </div>
+          </div>
+
+          <!-- Right: Notifications & Officer Profile -->
+          <div class="top-navbar-right">
+            <!-- Light / Dark Mode Toggle Button -->
+            <button type="button" class="nav-toggle-btn" id="themeToggleBtn" aria-label="Toggle Theme" title="Toggle Light / Dark Mode">
+              <i class="bi bi-moon-stars" id="themeIcon"></i>
+            </button>
+
+            <!-- In-App Notification Bell Dropdown -->
+            <div class="dropdown">
+              <button class="nav-toggle-btn position-relative" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="Notifications">
+                <i class="bi bi-bell"></i>
+                {% if unread_notifications_count > 0 %}
+                  <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger border border-white p-1" style="font-size: 0.65rem;">
+                    {{ unread_notifications_count }}
+                  </span>
+                {% endif %}
+              </button>
+              <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 rounded-3 mt-2" style="width: 320px; max-height: 400px; overflow-y: auto;">
+                <li class="dropdown-header d-flex justify-content-between align-items-center py-2 px-3 border-bottom">
+                  <span class="fw-bold text-dark">Notifications</span>
+                  {% if unread_notifications_count > 0 %}
+                    <form method="post" action="{% url 'mark_all_notifications_read' %}">
+                      {% csrf_token %}
+                      <button type="submit" class="btn btn-link btn-sm p-0 text-decoration-none small text-primary">Mark all read</button>
+                    </form>
+                  {% endif %}
+                </li>
+                {% for notif in recent_notifications %}
+                  <li>
+                    <form method="post" action="{% url 'mark_notification_read' notif.id %}">
+                      {% csrf_token %}
+                      <button type="submit" class="dropdown-item py-2.5 px-3 border-bottom {% if not notif.is_read %}bg-light fw-medium{% endif %} text-start">
+                        <div class="small text-dark fw-semibold">{{ notif.title }}</div>
+                        <div class="small text-muted text-truncate">{{ notif.message }}</div>
+                        <div class="text-muted" style="font-size: 0.70rem;">{{ notif.created_at|timesince }} ago</div>
+                      </button>
+                    </form>
+                  </li>
+                {% empty %}
+                  <li class="text-center py-4 text-muted small">No new notifications</li>
+                {% endfor %}
+                <li class="pt-2 text-center">
+                  <a class="dropdown-item text-center small text-primary fw-semibold py-2" href="{% url 'notifications_list' %}">
+                    View All Notifications <i class="bi bi-arrow-right ms-1"></i>
+                  </a>
+                </li>
+              </ul>
+            </div>
+
+            <!-- Profile Menu Dropdown -->
+            <div class="dropdown">
+              <button class="user-profile-btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                <div class="user-avatar-circle">
+                  {{ user.first_name|slice:":1"|default:user.username|slice:":1" }}{{ user.last_name|slice:":1" }}
+                </div>
+                <div class="d-none d-md-flex flex-column text-start" style="line-height: 1.2;">
+                  <span class="small fw-bold text-dark">{{ user.get_full_name|default:user.username }}</span>
+                  <span class="role-tag-badge role-{{ user.profile.role|default:'USER' }}">
+                    {{ user.profile.get_role_display|default:"User" }}
+                  </span>
+                </div>
+              </button>
+              <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 rounded-3 mt-2" style="min-width: 220px;">
+                <li class="px-3 py-2 border-bottom">
+                  <div class="fw-bold text-dark">{{ user.get_full_name|default:user.username }}</div>
+                  <div class="small text-muted text-truncate">{{ user.email|default:"No email set" }}</div>
+                  <div class="mt-1">
+                    <span class="role-tag-badge role-{{ user.profile.role|default:'USER' }}">
+                      {{ user.profile.get_role_display|default:"User" }}
+                    </span>
+                  </div>
+                </li>
+                <li><a class="dropdown-item py-2" href="{% url 'profile' %}"><i class="bi bi-person me-2 text-muted"></i>My Profile</a></li>
+                {% if user.profile.is_institution %}
+                  <li><a class="dropdown-item py-2" href="{% url 'institution_profile' %}"><i class="bi bi-bank me-2 text-muted"></i>Institution Details</a></li>
+                {% endif %}
+                {% if user.is_staff or user.is_superuser %}
+                  <li><a class="dropdown-item py-2" href="/admin/" target="_blank"><i class="bi bi-gear me-2 text-muted"></i>Django Admin</a></li>
+                {% endif %}
+                <li><hr class="dropdown-divider my-1"></li>
+                <li>
+                  <form method="post" action="{% url 'logout' %}">
+                    {% csrf_token %}
+                    <button type="submit" class="dropdown-item py-2 text-danger">
+                      <i class="bi bi-box-arrow-right me-2"></i>Sign Out
+                    </button>
+                  </form>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </header>
+      {% endif %}
+
+      <!-- Main Content Area -->
+      <main class="{% if user.is_authenticated %}app-content{% else %}container py-4{% endif %}">
+        <!-- Flash Messages -->
+        {% if messages %}
+          <div class="mb-4">
+            {% for message in messages %}
+              <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show border-0 shadow-sm rounded-3" role="alert">
+                {% if message.tags == 'success' %}<i class="bi bi-check-circle-fill me-2 text-success"></i>{% endif %}
+                {% if message.tags == 'error' or message.tags == 'danger' %}<i class="bi bi-exclamation-triangle-fill me-2 text-danger"></i>{% endif %}
+                {% if message.tags == 'warning' %}<i class="bi bi-exclamation-circle-fill me-2 text-warning"></i>{% endif %}
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+              </div>
+            {% endfor %}
+          </div>
+        {% endif %}
+
+        {% block content %}{% endblock %}
+      </main>
+    </div>
+  </div>
+
+  <!-- Floating FAQ / Chatbot Button -->
+  <button class="btn-chatbot-float" data-bs-toggle="modal" data-bs-target="#chatbotModal" title="AICTE SmartFlow Help Desk">
+    <i class="bi bi-robot fs-5"></i>
+    <span>AICTE Help Bot</span>
+  </button>
+
+  <!-- Interactive AICTE FAQ Chatbot Modal -->
+  <div class="modal fade" id="chatbotModal" tabindex="-1" aria-labelledby="chatbotModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-content shadow-lg border-0 rounded-4">
+        <div class="modal-header bg-primary text-white py-3 px-4 rounded-top-4">
+          <div class="d-flex align-items-center gap-2">
+            <i class="bi bi-robot fs-4 text-warning"></i>
+            <div>
+              <h5 class="modal-title mb-0" id="chatbotModalLabel">SmartFlow Help Desk</h5>
+              <small class="text-white-50">Instant regulatory and portal guidance</small>
+            </div>
+          </div>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body p-4">
+          <!-- Chat Conversation Container -->
+          <div id="chatHistory" style="max-height: 360px; overflow-y: auto; display: flex; flex-direction: column; gap: 14px;" class="mb-3 p-2">
+            <div class="chat-bubble-bot">
+              <strong>Namaste!</strong> I am your SmartFlow help assistant. You can ask about portal submission steps, supporting documents, workflow status meanings, or how to address flagged deficiencies.
+            </div>
+          </div>
+
+          <!-- Suggested Quick Question Chips -->
+          <div class="mb-3">
+            <small class="text-muted fw-semibold d-block mb-1">Frequently Asked Regulatory Topics:</small>
+            <div class="d-flex flex-wrap gap-2">
+              <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill py-0 px-2 quick-question" data-q="What are the steps to submit an application?">Submission Steps</button>
+              <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill py-0 px-2 quick-question" data-q="What supporting documents are requested?">Supporting Documents</button>
+              <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill py-0 px-2 quick-question" data-q="How do I respond to deficiency notes?">Deficiency Resolution</button>
+              <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill py-0 px-2 quick-question" data-q="What do the application statuses mean?">Status Meanings</button>
+              <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill py-0 px-2 quick-question" data-q="How do I contact the regional officer?">Contact Officer</button>
+            </div>
+          </div>
+
+          <!-- Chat Query Input -->
+          <form id="chatbotForm" class="d-flex gap-2">
+            <input type="text" id="chatInput" class="form-control" placeholder="Ask a question about the SmartFlow portal..." required>
+            <button type="submit" class="btn btn-primary px-3">
+              <i class="bi bi-send-fill"></i>
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bootstrap 5 JS Bundle -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+  <!-- Sidebar & Navigation JavaScript -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const body = document.body;
+      const sidebarCollapseBtn = document.getElementById('sidebarCollapseBtn');
+      const sidebarDesktopToggle = document.getElementById('sidebarDesktopToggle');
+      const sidebarMobileToggle = document.getElementById('sidebarMobileToggle');
+      const sidebarMobileClose = document.getElementById('sidebarMobileClose');
+      const sidebarBackdrop = document.getElementById('sidebarBackdrop');
+      const collapseIcon = document.getElementById('collapseIcon');
+
+      // Restore desktop sidebar collapsed state
+      const isCollapsed = localStorage.getItem('sf_sidebar_collapsed') === 'true';
+      if (isCollapsed && window.innerWidth >= 992) {
+        body.classList.add('sidebar-collapsed');
+        if (collapseIcon) {
+          collapseIcon.classList.replace('bi-chevron-double-left', 'bi-chevron-double-right');
+        }
+      }
+
+      function toggleDesktopSidebar() {
+        body.classList.toggle('sidebar-collapsed');
+        const collapsed = body.classList.contains('sidebar-collapsed');
+        localStorage.setItem('sf_sidebar_collapsed', collapsed ? 'true' : 'false');
+        if (collapseIcon) {
+          if (collapsed) {
+            collapseIcon.classList.replace('bi-chevron-double-left', 'bi-chevron-double-right');
+          } else {
+            collapseIcon.classList.replace('bi-chevron-double-right', 'bi-chevron-double-left');
+          }
+        }
+      }
+
+      if (sidebarCollapseBtn) {
+        sidebarCollapseBtn.addEventListener('click', toggleDesktopSidebar);
+      }
+      if (sidebarDesktopToggle) {
+        sidebarDesktopToggle.addEventListener('click', toggleDesktopSidebar);
+      }
+
+      // Mobile drawer open/close
+      if (sidebarMobileToggle) {
+        sidebarMobileToggle.addEventListener('click', function() {
+          body.classList.add('mobile-nav-open');
+        });
+      }
+      function closeMobileNav() {
+        body.classList.remove('mobile-nav-open');
+      }
+      if (sidebarMobileClose) {
+        sidebarMobileClose.addEventListener('click', closeMobileNav);
+      }
+      if (sidebarBackdrop) {
+        sidebarBackdrop.addEventListener('click', closeMobileNav);
+      }
+
+      // Responsive reset on window resize
+      window.addEventListener('resize', function() {
+        if (window.innerWidth >= 992) {
+          body.classList.remove('mobile-nav-open');
+        }
+      });
+
+      // Theme Toggle Logic
+      const themeToggleBtn = document.getElementById('themeToggleBtn');
+      const themeIcon = document.getElementById('themeIcon');
+      const publicThemeToggleBtn = document.getElementById('publicThemeToggleBtn');
+      const publicThemeIcon = document.getElementById('publicThemeIcon');
+
+      function updateThemeIcons(theme) {
+        const isDark = theme === 'dark';
+        if (themeIcon) {
+          themeIcon.className = isDark ? 'bi bi-sun-fill text-warning' : 'bi bi-moon-stars';
+        }
+        if (publicThemeIcon) {
+          publicThemeIcon.className = isDark ? 'bi bi-sun-fill text-warning' : 'bi bi-moon-stars';
+        }
+      }
+
+      function toggleTheme() {
+        const currentTheme = document.documentElement.getAttribute('data-bs-theme') || 'light';
+        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-bs-theme', newTheme);
+        localStorage.setItem('sf_theme', newTheme);
+        updateThemeIcons(newTheme);
+      }
+
+      if (themeToggleBtn) {
+        themeToggleBtn.addEventListener('click', toggleTheme);
+      }
+      if (publicThemeToggleBtn) {
+        publicThemeToggleBtn.addEventListener('click', toggleTheme);
+      }
+
+      // Sync icons with initial theme
+      const initialTheme = document.documentElement.getAttribute('data-bs-theme') || 'light';
+      updateThemeIcons(initialTheme);
+    });
+  </script>
+
+  <!-- Interactive Chatbot Logic -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const chatForm = document.getElementById('chatbotForm');
+      const chatInput = document.getElementById('chatInput');
+      const chatHistory = document.getElementById('chatHistory');
+
+      function escapeHtml(value) {
+        return String(value).replace(/[&<>"']/g, function(character) {
+          return {
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#39;'
+          }[character];
+        });
+      }
+
+      function appendMessage(text, isUser, source, action, disclaimer) {
+        const div = document.createElement('div');
+        div.className = isUser ? 'chat-bubble-user' : 'chat-bubble-bot';
+
+        let html = escapeHtml(text).replace(/\n/g, '<br>');
+        if (source) {
+          html += `<div class="mt-2 pt-2 border-top border-secondary-subtle small text-muted"><i class="bi bi-book me-1"></i><strong>Source:</strong> ${escapeHtml(source)}</div>`;
+        }
+        if (action) {
+          html += `<div class="mt-1 small text-primary"><i class="bi bi-arrow-right-circle me-1"></i><strong>Recommended Action:</strong> ${escapeHtml(action)}</div>`;
+        }
+        if (disclaimer) {
+          html += `<div class="mt-1 text-muted fst-italic" style="font-size:0.75rem;"><i class="bi bi-info-circle me-1"></i>${escapeHtml(disclaimer)}</div>`;
+        }
+
+        div.innerHTML = html;
+        chatHistory.appendChild(div);
+        chatHistory.scrollTop = chatHistory.scrollHeight;
+      }
+
+      function queryChatbot(query) {
+        appendMessage(query, true);
+
+        // Fetch response from API
+        fetch(`/api/chatbot/?q=${encodeURIComponent(query)}`)
+          .then(res => res.json())
+          .then(data => {
+            appendMessage(data.answer, false, data.source, data.recommended_action, data.disclaimer);
+          })
+          .catch(err => {
+            appendMessage("Unable to reach AICTE knowledge base at this moment. Please check network connection.", false);
+          });
+      }
+
+      if (chatForm) {
+        chatForm.addEventListener('submit', function(e) {
+          e.preventDefault();
+          const query = chatInput.value.trim();
+          if (query) {
+            queryChatbot(query);
+            chatInput.value = '';
+          }
+        });
+      }
+
+      document.querySelectorAll('.quick-question').forEach(btn => {
+        btn.addEventListener('click', function() {
+          const q = this.getAttribute('data-q');
+          queryChatbot(q);
+        });
+      });
+    });
+  </script>
+
+  {% block extra_scripts %}{% endblock %}
+</body>
+</html>

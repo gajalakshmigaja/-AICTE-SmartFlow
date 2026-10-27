@@ -1,0 +1,110 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if is_create %}Add Compliance Rule{% else %}Edit Rule: {{ rule.name }}{% endif %} | AICTE SmartFlow{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-8">
+    <div class="d-flex align-items-center gap-2 mb-4">
+      <a href="{% url 'compliance_rules' %}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-arrow-left"></i> Rules</a>
+      <div>
+        <h3 class="fw-bold mb-0">{% if is_create %}Add Compliance Rule{% else %}Edit Compliance Rule{% endif %}</h3>
+        <p class="text-muted small mb-0">{% if rule %}{{ rule.rule_code }} &bull; Confirm the source and applicability before activation.{% else %}Set a supported evaluation parameter and cite the source used to configure it.{% endif %}</p>
+      </div>
+    </div>
+
+    <div class="card shadow-sm border-0 rounded-4 p-4 p-md-5 bg-white mb-4">
+      <form method="post">
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+        {% if form.errors %}
+          <div class="alert alert-danger">Please correct the highlighted rule details.</div>
+        {% endif %}
+
+        <div class="row mb-3">
+          <div class="col-md-6">
+            <label class="form-label small fw-semibold">Rule Code *</label>
+            {{ form.rule_code }}
+            {{ form.rule_code.errors }}
+          </div>
+          <div class="col-md-6">
+            <label class="form-label small fw-semibold">Rule Category *</label>
+            {{ form.category }}
+            {{ form.category.errors }}
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label small fw-semibold">Friendly Rule Name *</label>
+          {{ form.name }}
+          {{ form.name.errors }}
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label small fw-semibold">Regulatory Reference Citation *</label>
+          {{ form.regulatory_reference }}
+          {{ form.regulatory_reference.errors }}
+          <div class="form-text small">Enter the exact document, edition, section, and table confirmed by an authorized reviewer.</div>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label small fw-semibold">Applicable Programme Category *</label>
+          {{ form.programme_category }}
+          {{ form.programme_category.errors }}
+        </div>
+
+        <div class="row mb-3">
+          <div class="col-md-4">
+            <label class="form-label small fw-semibold">Evaluation Parameter *</label>
+            {{ form.parameter_name }}
+            {{ form.parameter_name.errors }}
+          </div>
+          <div class="col-md-4">
+            <label class="form-label small fw-semibold">Threshold Value *</label>
+            {{ form.threshold_value }}
+            {{ form.threshold_value.errors }}
+          </div>
+          <div class="col-md-4">
+            <label class="form-label small fw-semibold">Effective Start Date *</label>
+            {{ form.effective_date }}
+            {{ form.effective_date.errors }}
+          </div>
+        </div>
+
+        <div class="mb-4">
+          <label class="form-label small fw-semibold">Norm Description & Guidelines</label>
+          {{ form.description }}
+          {{ form.description.errors }}
+        </div>
+
+        <div class="d-flex gap-4 mb-4">
+          <div class="form-check">
+            {{ form.is_mandatory }}
+            <label class="form-check-label fw-semibold" for="{{ form.is_mandatory.id_for_label }}">
+              Mandatory Regulatory Norm
+            </label>
+          </div>
+          <div class="form-check">
+            {{ form.is_active }}
+            <label class="form-check-label fw-semibold" for="{{ form.is_active.id_for_label }}">
+              Active for Automated Evaluation
+            </label>
+          </div>
+          <div class="form-check">
+            {{ form.is_source_verified }}
+            <label class="form-check-label fw-semibold" for="{{ form.is_source_verified.id_for_label }}">
+              Source citation and applicability verified
+            </label>
+            {{ form.is_source_verified.errors }}
+          </div>
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center pt-3 border-top">
+          <a href="{% url 'compliance_rules' %}" class="btn btn-outline-secondary">Cancel</a>
+          <button type="submit" class="btn btn-primary px-4 fw-semibold">{% if is_create %}Create Rule{% else %}Save Rule Changes{% endif %}</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

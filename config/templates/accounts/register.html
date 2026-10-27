@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+
+{% block title %}Register Institution | AICTE SmartFlow{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center my-4">
+  <div class="col-lg-8 col-xl-7">
+    <div class="card shadow border-0 rounded-4 p-4 p-md-5 bg-white">
+      <div class="mb-4">
+        <span class="badge bg-primary-subtle text-primary mb-2">Technical Institution Onboarding</span>
+        <h3 class="fw-bold">Create Institution Portal Account</h3>
+        <p class="text-muted small">Register your technical institute or trust to initiate approval applications and compliance submissions.</p>
+      </div>
+
+      {% if form.errors %}
+        <div class="alert alert-danger py-2 small">
+          Please correct the highlighted errors below before proceeding.
+        </div>
+      {% endif %}
+
+      <form method="post" action="{% url 'register' %}">
+        {% csrf_token %}
+
+        <h6 class="fw-bold text-secondary mb-3"><i class="bi bi-building me-2"></i>Institution Basic Details</h6>
+        <div class="mb-3">
+          <label class="form-label small fw-semibold">Official Institution Name *</label>
+          {{ form.institution_name }}
+          {% if form.institution_name.errors %}<div class="text-danger small">{{ form.institution_name.errors }}</div>{% endif %}
+        </div>
+
+        <div class="row mb-3">
+          <div class="col-md-6">
+            <label class="form-label small fw-semibold">Regional Office Jurisdiction *</label>
+            {{ form.regional_office }}
+          </div>
+          <div class="col-md-6">
+            <label class="form-label small fw-semibold">Contact Phone *</label>
+            {{ form.contact_phone }}
+          </div>
+        </div>
+
+        <hr class="my-4">
+
+        <h6 class="fw-bold text-secondary mb-3"><i class="bi bi-person-badge me-2"></i>Authorized Representative & Login Credentials</h6>
+        <div class="row mb-3">
+          <div class="col-md-6">
+            <label class="form-label small fw-semibold">First Name (Principal / Director) *</label>
+            {{ form.first_name }}
+          </div>
+          <div class="col-md-6">
+            <label class="form-label small fw-semibold">Last Name / Designation</label>
+            {{ form.last_name }}
+          </div>
+        </div>
+
+        <div class="row mb-3">
+          <div class="col-md-6">
+            <label class="form-label small fw-semibold">Official Email Address *</label>
+            {{ form.email }}
+            {% if form.email.errors %}<div class="text-danger small">{{ form.email.errors }}</div>{% endif %}
+          </div>
+          <div class="col-md-6">
+            <label class="form-label small fw-semibold">Username for Login *</label>
+            {{ form.username }}
+            {% if form.username.errors %}<div class="text-danger small">{{ form.username.errors }}</div>{% endif %}
+          </div>
+        </div>
+
+        <div class="row mb-4">
+          <div class="col-md-6">
+            <label class="form-label small fw-semibold">Create Password *</label>
+            {{ form.password }}
+            {% if form.password.errors %}<div class="text-danger small">{{ form.password.errors }}</div>{% endif %}
+          </div>
+          <div class="col-md-6">
+            <label class="form-label small fw-semibold">Confirm Password *</label>
+            {{ form.confirm_password }}
+            {% if form.confirm_password.errors %}<div class="text-danger small">{{ form.confirm_password.errors }}</div>{% endif %}
+          </div>
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center">
+          <a href="{% url 'login' %}" class="text-decoration-none small">Already registered? Sign In</a>
+          <button type="submit" class="btn btn-primary px-4 py-2 fw-semibold">Complete Registration</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

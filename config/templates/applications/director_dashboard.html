@@ -1,0 +1,206 @@
+{% extends 'base.html' %}
+
+{% block title %}Executive Analytics & Regional Director Dashboard | AICTE SmartFlow{% endblock %}
+
+{% block extra_head %}
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2">
+  <div>
+    <h3 class="fw-bold mb-1">Executive Analytics & Governance Portal</h3>
+    <p class="text-muted small mb-0">Regional Director and Central Administration real-time oversight and officer workload metrics.</p>
+  </div>
+  <div class="d-flex gap-2">
+    <a href="{% url 'compliance_rules' %}" class="btn btn-outline-secondary">
+      <i class="bi bi-sliders me-1"></i> Handbook Rules
+    </a>
+    <a href="{% url 'audit_log_list' %}" class="btn btn-outline-secondary">
+      <i class="bi bi-shield-shaded me-1"></i> Audit Trail
+    </a>
+  </div>
+</div>
+
+<!-- Macro KPI Metrics Cards -->
+<div class="row g-3 mb-4">
+  <div class="col-sm-6 col-xl-2">
+    <div class="card card-kpi p-3 border-0 shadow-sm text-center">
+      <div class="text-muted small fw-semibold text-uppercase">Total Apps</div>
+      <div class="fs-2 fw-bold text-dark">{{ total_apps }}</div>
+    </div>
+  </div>
+  <div class="col-sm-6 col-xl-2">
+    <div class="card card-kpi p-3 border-0 shadow-sm text-center">
+      <div class="text-info small fw-semibold text-uppercase">Submitted</div>
+      <div class="fs-2 fw-bold text-info">{{ submitted_count }}</div>
+    </div>
+  </div>
+  <div class="col-sm-6 col-xl-2">
+    <div class="card card-kpi p-3 border-0 shadow-sm text-center">
+      <div class="text-primary small fw-semibold text-uppercase">In Scrutiny</div>
+      <div class="fs-2 fw-bold text-primary">{{ in_scrutiny_count }}</div>
+    </div>
+  </div>
+  <div class="col-sm-6 col-xl-2">
+    <div class="card card-kpi p-3 border-0 shadow-sm text-center">
+      <div class="text-warning small fw-semibold text-uppercase">Deficiencies</div>
+      <div class="fs-2 fw-bold text-warning">{{ deficiency_count }}</div>
+    </div>
+  </div>
+  <div class="col-sm-6 col-xl-2">
+    <div class="card card-kpi p-3 border-0 shadow-sm text-center">
+      <div class="text-success small fw-semibold text-uppercase">Approved</div>
+      <div class="fs-2 fw-bold text-success">{{ approved_count }}</div>
+    </div>
+  </div>
+  <div class="col-sm-6 col-xl-2">
+    <div class="card card-kpi p-3 border-0 shadow-sm text-center">
+      <div class="text-danger small fw-semibold text-uppercase">Overdue SLA</div>
+      <div class="fs-2 fw-bold text-danger">{{ overdue_count }}</div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-4 mb-4">
+  <!-- Status Distribution Chart -->
+  <div class="col-lg-6">
+    <div class="card border-0 shadow-sm rounded-4 p-4 bg-white h-100">
+      <h5 class="fw-bold mb-3"><i class="bi bi-pie-chart me-2 text-primary"></i>Application Stage Distribution</h5>
+      <div style="height: 280px; position: relative;">
+        <canvas id="stageChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- Regional Scrutiny Officer Workload Table -->
+  <div class="col-lg-6">
+    <div class="card border-0 shadow-sm rounded-4 bg-white h-100">
+      <div class="card-header bg-transparent py-3 px-4 border-bottom">
+        <h5 class="fw-bold mb-0"><i class="bi bi-person-lines-fill me-2 text-primary"></i>Officer Workload & Throughput</h5>
+      </div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0 small">
+            <thead class="table-light">
+              <tr>
+                <th class="ps-4">Officer Name</th>
+                <th>Assigned</th>
+                <th>In Progress</th>
+                <th>Completed</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for item in officer_workloads %}
+                <tr>
+                  <td class="ps-4 fw-semibold text-dark">
+                    {{ item.officer.get_full_name|default:item.officer.username }}
+                  </td>
+                  <td><span class="badge bg-light text-dark border">{{ item.assigned }}</span></td>
+                  <td><span class="badge bg-primary-subtle text-primary">{{ item.in_progress }}</span></td>
+                  <td><span class="badge bg-success-subtle text-success">{{ item.completed }}</span></td>
+                </tr>
+              {% empty %}
+                <tr>
+                  <td colspan="4" class="text-center py-4 text-muted">
+                    No scrutiny officers configured yet. You can assign the 'Scrutiny Officer' role to staff users in Django Admin.
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Recent Applications List -->
+<div class="card border-0 shadow-sm rounded-4 bg-white mb-4">
+  <div class="card-header bg-transparent py-3 px-4 d-flex justify-content-between align-items-center border-bottom">
+    <h5 class="fw-bold mb-0">Recently Processed Regulatory Submissions</h5>
+    <span class="badge bg-light text-dark border">Latest 10</span>
+  </div>
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0 small">
+        <thead class="table-light">
+          <tr>
+            <th class="ps-4">Application</th>
+            <th>Institution</th>
+            <th>Type</th>
+            <th>Intake / Faculty</th>
+            <th>Status</th>
+            <th>Submitted On</th>
+            <th class="text-end pe-4">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for app in recent_apps %}
+            <tr>
+              <td class="ps-4 fw-bold">
+                <a href="{% url 'application_detail' app.id %}" class="text-decoration-none text-primary">{{ app.application_number }}</a>
+              </td>
+              <td>{{ app.institution_name }}</td>
+              <td>{{ app.get_application_type_display }}</td>
+              <td>{{ app.total_intake }} / {{ app.total_faculty }}</td>
+              <td><span class="badge-status status-{{ app.status }}">{{ app.get_status_display }}</span></td>
+              <td class="text-muted">{{ app.submitted_at|date:"d M Y"|default:app.created_at|date:"d M Y" }}</td>
+              <td class="text-end pe-4">
+                <a href="{% url 'application_detail' app.id %}" class="btn btn-xs btn-outline-primary">View Audit</a>
+              </td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="7" class="text-center py-4 text-muted">No applications found in system.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const ctx = document.getElementById('stageChart');
+    if (ctx) {
+      new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: ['Draft', 'Submitted', 'In Scrutiny', 'Deficiency Flagged', 'Approved', 'Rejected'],
+          datasets: [{
+            data: [
+              {{ draft_count }},
+              {{ submitted_count }},
+              {{ in_scrutiny_count }},
+              {{ deficiency_count }},
+              {{ approved_count }},
+              {{ rejected_count }}
+            ],
+            backgroundColor: [
+              '#94a3b8',
+              '#38bdf8',
+              '#3b82f6',
+              '#f97316',
+              '#22c55e',
+              '#ef4444'
+            ],
+            borderWidth: 2
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'bottom'
+            }
+          }
+        }
+      });
+    }
+  });
+</script>
+{% endblock %}

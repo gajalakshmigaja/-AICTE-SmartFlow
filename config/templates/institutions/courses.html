@@ -1,0 +1,131 @@
+{% extends 'base.html' %}
+
+{% block title %}Programmes & Courses | AICTE SmartFlow{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2">
+  <div>
+    <h3 class="fw-bold mb-1">Academic Programmes & Courses</h3>
+    <p class="text-muted small mb-0">{{ institution.name }} &bull; Approved and Proposed Student Intake</p>
+  </div>
+  <a href="{% url 'institution_profile' %}" class="btn btn-outline-secondary">
+    <i class="bi bi-arrow-left me-1"></i> Campus Profile
+  </a>
+</div>
+
+<div class="row g-4">
+  <!-- Left Column: Add Course Form -->
+  <div class="col-lg-5">
+    <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+      <h5 class="fw-bold mb-3 text-primary"><i class="bi bi-plus-circle me-2"></i>{% if editing_course %}Edit Course{% else %}Add Programme / Course{% endif %}</h5>
+      <form method="post">
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+        {% if form.errors %}
+          <div class="alert alert-danger">Please correct the highlighted course details.</div>
+        {% endif %}
+
+        <div class="mb-3">
+          <label class="form-label small fw-semibold">Programme Discipline *</label>
+          {{ form.programme }}
+          {{ form.programme.errors }}
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label small fw-semibold">Level of Course *</label>
+          {{ form.level }}
+          {{ form.level.errors }}
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label small fw-semibold">Course / Specialization Title *</label>
+          {{ form.course_name }}
+          {{ form.course_name.errors }}
+        </div>
+
+        <div class="row mb-3">
+          <div class="col-md-6">
+            <label class="form-label small fw-semibold">Current Approved Intake</label>
+            {{ form.approved_intake }}
+            {{ form.approved_intake.errors }}
+          </div>
+          <div class="col-md-6">
+            <label class="form-label small fw-semibold">Proposed Intake *</label>
+            {{ form.proposed_intake }}
+            {{ form.proposed_intake.errors }}
+          </div>
+        </div>
+
+        <div class="mb-4">
+          <label class="form-label small fw-semibold">Course Duration (Years)</label>
+          {{ form.duration_years }}
+          {{ form.duration_years.errors }}
+        </div>
+
+        <button type="submit" class="btn btn-primary w-100 fw-semibold">
+          <i class="bi bi-check-lg me-1"></i> {% if editing_course %}Save Course Changes{% else %}Add Course Record{% endif %}
+        </button>
+        {% if editing_course %}
+          <a href="{% url 'manage_courses' %}" class="btn btn-link w-100 mt-2">Cancel editing</a>
+        {% endif %}
+      </form>
+    </div>
+  </div>
+
+  <!-- Right Column: Courses List -->
+  <div class="col-lg-7">
+    <div class="card border-0 shadow-sm rounded-4 bg-white">
+      <div class="card-header bg-transparent py-3 px-4 d-flex justify-content-between align-items-center border-bottom">
+        <h5 class="fw-bold mb-0">Configured Academic Courses</h5>
+        <span class="badge bg-light text-dark border">{{ courses.count }} Courses</span>
+      </div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+              <tr>
+                <th class="ps-4">Course Title</th>
+                <th>Level</th>
+                <th>Intake</th>
+                <th class="text-end pe-4">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for course in courses %}
+                <tr>
+                  <td class="ps-4">
+                    <div class="fw-bold text-dark">{{ course.course_name }}</div>
+                    <div class="small text-muted">{{ course.get_programme_display }}</div>
+                  </td>
+                  <td><span class="badge bg-light text-secondary border">{{ course.get_level_display }}</span></td>
+                  <td>
+                    <span class="fw-bold text-primary">{{ course.proposed_intake }}</span> seats
+                    <span class="small text-muted">(prev: {{ course.approved_intake }})</span>
+                  </td>
+                  <td class="text-end pe-4">
+                    <a href="{% url 'edit_course' course.id %}" class="btn btn-sm btn-outline-primary" title="Edit Course">
+                      <i class="bi bi-pencil"></i>
+                    </a>
+                    <form method="post" action="{% url 'delete_course' course.id %}" style="display:inline;">
+                      {% csrf_token %}
+                      <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Remove course: {{ course.course_name }}?');">
+                        <i class="bi bi-trash"></i>
+                      </button>
+                    </form>
+                  </td>
+                </tr>
+              {% empty %}
+                <tr>
+                  <td colspan="4" class="text-center py-4 text-muted">
+                    No academic courses declared yet. Use the form to add your programmes.
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

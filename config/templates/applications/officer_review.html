@@ -1,0 +1,315 @@
+{% extends 'base.html' %}
+
+{% block title %}Scrutiny Console: {{ application.application_number }} | AICTE SmartFlow{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2">
+  <div class="d-flex align-items-center gap-2">
+    <a href="{% url 'officer_dashboard' %}" class="btn btn-sm btn-outline-secondary">
+      <i class="bi bi-arrow-left"></i> Queue
+    </a>
+    <div>
+      <h3 class="fw-bold mb-0 text-primary">{{ application.application_number }}</h3>
+      <p class="text-muted small mb-0">{{ application.institution_name }} &bull; {{ application.get_application_type_display }} ({{ application.academic_year }})</p>
+    </div>
+  </div>
+
+  <div class="d-flex align-items-center gap-2">
+    <span class="badge-status status-{{ application.status }} fs-6 px-3 py-2">
+      Status: {{ application.get_status_display }}
+    </span>
+  </div>
+</div>
+
+<div class="row g-4">
+  <!-- Left Column: Detailed Application Review, Documents & Compliance -->
+  <div class="col-lg-8">
+    <!-- Institution Core Norms Summary Card -->
+    <div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
+      <h5 class="fw-bold mb-3 text-secondary"><i class="bi bi-bank me-2"></i>Declared Institution Parameters</h5>
+      <div class="row g-3 small">
+        <div class="col-sm-6 col-md-3">
+          <div class="text-muted">Total Student Intake</div>
+          <div class="fs-5 fw-bold text-dark">{{ application.total_intake }}</div>
+        </div>
+        <div class="col-sm-6 col-md-3">
+          <div class="text-muted">Total Teaching Faculty</div>
+          <div class="fs-5 fw-bold text-dark">{{ application.total_faculty }}</div>
+        </div>
+        <div class="col-sm-6 col-md-3">
+          <div class="text-muted">Land Area (Acres)</div>
+          <div class="fs-5 fw-bold text-dark">{{ institution.land_area_acres|default:"2.5" }}</div>
+        </div>
+        <div class="col-sm-6 col-md-3">
+          <div class="text-muted">Built-up Area (Sq.m)</div>
+          <div class="fs-5 fw-bold text-dark">{{ institution.built_up_area_sqm|floatformat:0|default:"4000" }}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Uploaded Documents & Officer Verification Console -->
+    <div class="card border-0 shadow-sm rounded-4 bg-white mb-4">
+      <div class="card-header bg-transparent py-3 px-4 d-flex justify-content-between align-items-center border-bottom">
+        <h5 class="fw-bold mb-0"><i class="bi bi-file-earmark-check me-2"></i>Regulatory Documents & Verification</h5>
+        <span class="badge bg-light text-dark border">{{ documents.count }} Documents</span>
+      </div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+              <tr>
+                <th class="ps-4">Document Category</th>
+                <th>File / Version</th>
+                <th>Status</th>
+                <th>AI Pre-Check</th>
+                <th class="text-end pe-4">Verification Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for doc in documents %}
+                <tr>
+                  <td class="ps-4 fw-semibold">
+                    {{ doc.get_document_type_display }}
+                    {% if doc.expiry_date %}
+                      <div class="small text-muted"><i class="bi bi-calendar me-1"></i>Expires: {{ doc.expiry_date|date:"d M Y" }}</div>
+                    {% endif %}
+                  </td>
+                  <td>
+                    <div class="small fw-medium">{{ doc.title }} (v{{ doc.version }})</div>
+                    <div class="small text-muted">{{ doc.file_size|filesizeformat }}</div>
+                  </td>
+                  <td>
+                    {% if doc.verification_status == 'VERIFIED' %}
+                      <span class="badge bg-success-subtle text-success"><i class="bi bi-check-circle me-1"></i>Verified</span>
+                    {% elif doc.verification_status == 'DEFICIENT' %}
+                      <span class="badge bg-warning-subtle text-warning"><i class="bi bi-exclamation-circle me-1"></i>Deficient</span>
+                    {% elif doc.verification_status == 'REJECTED' %}
+                      <span class="badge bg-danger-subtle text-danger"><i class="bi bi-x-circle me-1"></i>Rejected</span>
+                    {% else %}
+                      <span class="badge bg-secondary-subtle text-secondary"><i class="bi bi-clock me-1"></i>Pending</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    {% if doc.ai_analysis %}
+                      <button type="button" class="btn btn-xs btn-outline-info py-0 px-2" data-bs-toggle="modal" data-bs-target="#aiModal{{ doc.id }}" style="font-size:0.75rem;">
+                        <i class="bi bi-robot me-1"></i>AI Findings ({{ doc.ai_analysis.confidence_score|floatformat:2 }})
+                      </button>
+                    {% else %}
+                      <form method="post" action="{% url 'run_ai_analysis' doc.id %}" class="d-inline">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-xs btn-outline-secondary py-0 px-2" style="font-size:0.75rem;">Run AI</button>
+                      </form>
+                    {% endif %}
+                  </td>
+                  <td class="text-end pe-4">
+                    <div class="btn-group">
+                      <a href="{% url 'download_document' doc.id %}" class="btn btn-sm btn-outline-secondary" target="_blank" title="Download File">
+                        <i class="bi bi-download"></i>
+                      </a>
+                      <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#verifyDocModal{{ doc.id }}">
+                        <i class="bi bi-check2-square"></i> Verify
+                      </button>
+                    </div>
+
+                    <!-- Verify Document Modal -->
+                    <div class="modal fade" id="verifyDocModal{{ doc.id }}" tabindex="-1" aria-hidden="true">
+                      <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content text-start">
+                          <form method="post" action="{% url 'verify_document' doc.id %}">
+                            {% csrf_token %}
+                            <div class="modal-header">
+                              <h5 class="modal-title fw-bold">Verify {{ doc.title }}</h5>
+                              <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                              <div class="mb-3">
+                                <label class="form-label small fw-semibold">Verification Determination</label>
+                                <select name="verification_status" class="form-select">
+                                  <option value="VERIFIED" {% if doc.verification_status == 'VERIFIED' %}selected{% endif %}>Verified & Accepted</option>
+                                  <option value="DEFICIENT" {% if doc.verification_status == 'DEFICIENT' %}selected{% endif %}>Deficient (Flag for Replacement)</option>
+                                  <option value="REJECTED" {% if doc.verification_status == 'REJECTED' %}selected{% endif %}>Rejected</option>
+                                </select>
+                              </div>
+                              <div class="mb-3">
+                                <label class="form-label small fw-semibold">Scrutiny Officer Remarks</label>
+                                <textarea name="reviewer_comments" class="form-control" rows="3" placeholder="Enter findings, defect reasons, or acceptance notes...">{{ doc.reviewer_comments }}</textarea>
+                              </div>
+                            </div>
+                            <div class="modal-footer">
+                              <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                              <button type="submit" class="btn btn-primary btn-sm">Record Determination</button>
+                            </div>
+                          </form>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- AI Findings Modal -->
+                    {% if doc.ai_analysis %}
+                      <div class="modal fade" id="aiModal{{ doc.id }}" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered modal-lg">
+                          <div class="modal-content text-start">
+                            <div class="modal-header bg-light">
+                              <h5 class="modal-title fw-bold"><i class="bi bi-robot text-primary me-2"></i>AI Document Extraction & Analysis</h5>
+                              <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body p-4">
+                              <div class="alert alert-info py-2 small mb-3">
+                                <i class="bi bi-shield-exclamation me-1"></i>
+                                <strong>Advisory Notice:</strong> {{ doc.ai_analysis.disclaimer }}
+                              </div>
+
+                              <div class="row mb-3">
+                                <div class="col-md-6">
+                                  <small class="text-muted d-block">Analysis Status:</small>
+                                  <span class="badge bg-primary">{{ doc.ai_analysis.get_status_display }}</span>
+                                </div>
+                                <div class="col-md-6">
+                                  <small class="text-muted d-block">AI Confidence Score:</small>
+                                  <strong>{{ doc.ai_analysis.confidence_score|floatformat:2 }} / 1.00</strong>
+                                </div>
+                              </div>
+
+                              <h6 class="fw-bold mt-3 mb-2">Findings Checklist:</h6>
+                              <ul class="list-group mb-3">
+                                {% for finding in doc.ai_analysis.findings %}
+                                  <li class="list-group-item small d-flex justify-content-between align-items-center">
+                                    <span><strong>{{ finding.category }}:</strong> {{ finding.message }}</span>
+                                    <span class="badge {% if finding.severity == 'PASS' %}bg-success{% elif finding.severity == 'FAIL' %}bg-danger{% elif finding.severity == 'WARNING' %}bg-warning text-dark{% else %}bg-secondary{% endif %}">
+                                      {{ finding.severity }}
+                                    </span>
+                                  </li>
+                                {% empty %}
+                                  <li class="list-group-item small text-muted">No specific defect rules triggered.</li>
+                                {% endfor %}
+                              </ul>
+
+                              <h6 class="fw-bold mt-3 mb-2">Extracted Text Preview:</h6>
+                              <div class="p-3 bg-light rounded border small text-muted font-monospace" style="max-height:160px; overflow-y:auto;">
+                                {{ doc.ai_analysis.extracted_text_preview }}
+                              </div>
+
+                              <hr class="my-4">
+
+                              <h6 class="fw-bold mb-2">Officer Human Verification Verdict:</h6>
+                              <form method="post" action="{% url 'verify_ai_finding' doc.id %}">
+                                {% csrf_token %}
+                                <div class="row g-2 mb-2">
+                                  <div class="col-md-4">
+                                    <select name="verdict" class="form-select form-select-sm">
+                                      <option value="CONFIRMED" {% if doc.ai_analysis.human_verdict == 'CONFIRMED' %}selected{% endif %}>Confirm AI Finding</option>
+                                      <option value="REJECTED" {% if doc.ai_analysis.human_verdict == 'REJECTED' %}selected{% endif %}>Reject / False Alarm</option>
+                                      <option value="MODIFIED" {% if doc.ai_analysis.human_verdict == 'MODIFIED' %}selected{% endif %}>Modified Determination</option>
+                                    </select>
+                                  </div>
+                                  <div class="col-md-6">
+                                    <input type="text" name="reviewer_notes" class="form-control form-control-sm" placeholder="Reviewer verification remarks..." value="{{ doc.ai_analysis.reviewer_notes }}">
+                                  </div>
+                                  <div class="col-md-2">
+                                    <button type="submit" class="btn btn-sm btn-primary w-100">Save Verdict</button>
+                                  </div>
+                                </div>
+                              </form>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    {% endif %}
+                  </td>
+                </tr>
+              {% empty %}
+                <tr><td colspan="5" class="text-center py-4 text-muted">No documents uploaded.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Regulatory Compliance Report Card -->
+    <div class="card border-0 shadow-sm rounded-4 bg-white mb-4">
+      <div class="card-header bg-transparent py-3 px-4 d-flex justify-content-between align-items-center border-bottom">
+        <h5 class="fw-bold mb-0"><i class="bi bi-shield-check me-2"></i>Compliance Engine Evaluation</h5>
+        <form method="post" action="{% url 'run_compliance' application.id %}">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-sm btn-outline-primary">
+            <i class="bi bi-arrow-clockwise me-1"></i> Re-run Check
+          </button>
+        </form>
+      </div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0 small">
+            <thead class="table-light">
+              <tr>
+                <th class="ps-4">Parameter</th>
+                <th>Status</th>
+                <th>Finding / Evidence</th>
+                <th>Regulatory Reference</th>
+                <th>Action Required</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for res in compliance_results %}
+                <tr>
+                  <td class="ps-4 fw-bold">{{ res.check_name }}</td>
+                  <td>
+                    {% if res.status == 'PASS' %}<span class="badge bg-success-subtle text-success">Pass</span>
+                    {% elif res.status == 'WARNING' %}<span class="badge bg-warning-subtle text-warning">Warning</span>
+                    {% elif res.status == 'FAIL' %}<span class="badge bg-danger-subtle text-danger">Fail</span>
+                    {% else %}<span class="badge bg-info-subtle text-info">Manual</span>{% endif %}
+                  </td>
+                  <td>{{ res.explanation }}</td>
+                  <td class="text-muted">{{ res.regulatory_reference }}</td>
+                  <td class="text-primary">{{ res.suggested_action|default:"-" }}</td>
+                </tr>
+              {% empty %}
+                <tr><td colspan="5" class="text-center py-3 text-muted">No evaluation run.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right Column: Official Scrutiny Decision Panel -->
+  <div class="col-lg-4">
+    <div class="card border-0 shadow-sm rounded-4 p-4 bg-white sticky-top" style="top: 20px;">
+      <h5 class="fw-bold mb-3 text-dark"><i class="bi bi-pen-fill text-primary me-2"></i>Official Review Action</h5>
+      <p class="small text-muted mb-4">Select the regulatory action and provide compulsory justification or deficiency notes.</p>
+
+      <form method="post">
+        {% csrf_token %}
+
+        <div class="mb-3">
+          <label class="form-label small fw-semibold">Review Action Decision *</label>
+          {{ form.action }}
+          {% if form.action.errors %}<div class="text-danger small">{{ form.action.errors }}</div>{% endif %}
+        </div>
+
+        <div class="mb-4">
+          <label class="form-label small fw-semibold">Review Comments / Deficiency Notes *</label>
+          {{ form.comments }}
+          <div class="form-text small">Detailed remarks are mandatory when flagging deficiencies or rejecting.</div>
+          {% if form.comments.errors %}<div class="text-danger small">{{ form.comments.errors }}</div>{% endif %}
+        </div>
+
+        <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold shadow-sm mb-2" onclick="return confirm('Confirm execution of this regulatory decision?');">
+          <i class="bi bi-check2-circle me-1"></i> Submit Review Determination
+        </button>
+      </form>
+
+      <hr class="my-4">
+
+      <h6 class="fw-bold text-secondary mb-2">Workflow Transition Rules:</h6>
+      <ul class="small text-muted mb-0 ps-3">
+        <li><strong>Submitted &rarr; In Scrutiny:</strong> Assigns application to your scrutiny queue.</li>
+        <li><strong>In Scrutiny &rarr; Deficiency Flagged:</strong> Returns application to institution for clarification and document re-upload.</li>
+        <li><strong>In Scrutiny &rarr; Approved:</strong> Recommends formal AICTE approval clearance.</li>
+        <li><strong>In Scrutiny &rarr; Rejected:</strong> Final rejection on grounds of non-compliance.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+{% endblock %}

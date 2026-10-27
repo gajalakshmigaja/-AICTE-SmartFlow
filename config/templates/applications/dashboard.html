@@ -1,0 +1,189 @@
+{% extends 'base.html' %}
+
+{% block title %}Institution Dashboard | AICTE SmartFlow{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2">
+  <div>
+    <h3 class="fw-bold mb-1">Institution Application Portal</h3>
+    <p class="text-muted small mb-0">Welcome, {{ user.first_name|default:user.username }}. Manage approval submissions, compliance, and document records.</p>
+  </div>
+  <div class="d-flex gap-2">
+    <a href="{% url 'create_application' %}" class="btn btn-primary shadow-sm fw-semibold">
+      <i class="bi bi-plus-circle me-1"></i> New Application
+    </a>
+    <a href="{% url 'institution_profile' %}" class="btn btn-outline-secondary">
+      <i class="bi bi-gear me-1"></i> Institution Profile
+    </a>
+  </div>
+</div>
+
+<!-- Quick Statistics KPI Cards -->
+<div class="row g-3 mb-4">
+  <div class="col-sm-6 col-xl-2">
+    <div class="card card-kpi p-3 text-center border-0 shadow-sm">
+      <div class="text-muted small fw-semibold text-uppercase">Total</div>
+      <div class="fs-2 fw-bold text-dark">{{ total }}</div>
+    </div>
+  </div>
+  <div class="col-sm-6 col-xl-2">
+    <div class="card card-kpi p-3 text-center border-0 shadow-sm">
+      <div class="text-secondary small fw-semibold text-uppercase">Drafts</div>
+      <div class="fs-2 fw-bold text-secondary">{{ draft }}</div>
+    </div>
+  </div>
+  <div class="col-sm-6 col-xl-2">
+    <div class="card card-kpi p-3 text-center border-0 shadow-sm">
+      <div class="text-primary small fw-semibold text-uppercase">In Scrutiny</div>
+      <div class="fs-2 fw-bold text-primary">{{ pending }}</div>
+    </div>
+  </div>
+  <div class="col-sm-6 col-xl-2">
+    <div class="card card-kpi p-3 text-center border-0 shadow-sm">
+      <div class="text-warning small fw-semibold text-uppercase">Deficiencies</div>
+      <div class="fs-2 fw-bold text-warning">{{ deficiencies }}</div>
+    </div>
+  </div>
+  <div class="col-sm-6 col-xl-2">
+    <div class="card card-kpi p-3 text-center border-0 shadow-sm">
+      <div class="text-success small fw-semibold text-uppercase">Approved</div>
+      <div class="fs-2 fw-bold text-success">{{ approved }}</div>
+    </div>
+  </div>
+  <div class="col-sm-6 col-xl-2">
+    <div class="card card-kpi p-3 text-center border-0 shadow-sm">
+      <div class="text-danger small fw-semibold text-uppercase">Rejected</div>
+      <div class="fs-2 fw-bold text-danger">{{ rejected }}</div>
+    </div>
+  </div>
+</div>
+
+<!-- Institution Profile Readiness Banner -->
+{% if institution %}
+  <div class="card border-0 shadow-sm rounded-4 p-3 mb-4 bg-white">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+      <div class="d-flex align-items-center gap-3">
+        <div class="p-3 rounded-circle bg-primary-subtle text-primary">
+          <i class="bi bi-bank fs-4"></i>
+        </div>
+        <div>
+          <h5 class="fw-bold mb-1">{{ institution.name }}</h5>
+          <div class="small text-muted">
+            <span><i class="bi bi-geo-alt me-1"></i>{{ institution.state|default:"State not set" }}</span> &bull;
+            <span>Type: {{ institution.get_institution_type_display }}</span> &bull;
+            <span>Land: {{ institution.land_area_acres }} acres</span> &bull;
+            <span>Built-up: {{ institution.built_up_area_sqm|floatformat:0 }} sq.m</span>
+          </div>
+        </div>
+      </div>
+      <div class="d-flex gap-2">
+        <a href="{% url 'manage_courses' %}" class="btn btn-sm btn-outline-primary">
+          <i class="bi bi-mortarboard me-1"></i>Courses ({{ institution.courses.count }})
+        </a>
+        <a href="{% url 'manage_faculty' %}" class="btn btn-sm btn-outline-primary">
+          <i class="bi bi-people me-1"></i>Faculty ({{ institution.faculty_members.count }})
+        </a>
+      </div>
+    </div>
+  </div>
+{% endif %}
+
+<!-- Applications Table Card -->
+<div class="card border-0 shadow-sm rounded-4 bg-white mb-4">
+  <div class="card-header bg-transparent py-3 px-4 d-flex justify-content-between align-items-center border-bottom">
+    <h5 class="fw-bold mb-0">Your Approval Applications</h5>
+    <span class="badge bg-light text-dark border">{{ applications.count }} Total</span>
+  </div>
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th class="ps-4">Application Number</th>
+            <th>Type</th>
+            <th>Academic Year</th>
+            <th>Intake / Faculty</th>
+            <th>Workflow Status</th>
+            <th>Submission Date</th>
+            <th class="text-end pe-4">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for app in applications %}
+            <tr>
+              <td class="ps-4">
+                <a href="{% url 'application_detail' app.id %}" class="fw-bold text-decoration-none text-primary">
+                  {{ app.application_number }}
+                </a>
+                <div class="small text-muted">{{ app.institution_name }}</div>
+              </td>
+              <td>{{ app.get_application_type_display }}</td>
+              <td><span class="badge bg-light text-secondary border">{{ app.academic_year }}</span></td>
+              <td>
+                <span class="small fw-semibold">{{ app.total_intake }}</span> seats /
+                <span class="small fw-semibold">{{ app.total_faculty }}</span> faculty
+              </td>
+              <td>
+                <span class="badge-status status-{{ app.status }}">
+                  {{ app.get_status_display }}
+                </span>
+                {% if app.is_overdue %}
+                  <span class="badge bg-danger ms-1" title="Overdue for Scrutiny"><i class="bi bi-alarm"></i> Overdue</span>
+                {% endif %}
+              </td>
+              <td class="small text-muted">
+                {{ app.submitted_at|date:"d M Y"|default:app.created_at|date:"d M Y" }}
+              </td>
+              <td class="text-end pe-4">
+                <div class="btn-group">
+                  <a href="{% url 'application_detail' app.id %}" class="btn btn-sm btn-outline-primary">
+                    <i class="bi bi-folder2-open me-1"></i>Open
+                  </a>
+                  {% if app.status == 'DRAFT' %}
+                    <form method="post" action="{% url 'submit_application' app.id %}" style="display:inline;">
+                      {% csrf_token %}
+                      <button type="submit" class="btn btn-sm btn-primary ms-1" onclick="return confirm('Submit this application to the SmartFlow review workflow?');">
+                        Submit
+                      </button>
+                    </form>
+                  {% elif app.status == 'DEFICIENCY_FLAGGED' %}
+                    <a href="{% url 'application_detail' app.id %}#deficiencySection" class="btn btn-sm btn-warning ms-1 text-dark fw-semibold">
+                      Respond
+                    </a>
+                  {% endif %}
+                </div>
+              </td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="7" class="text-center py-5 text-muted">
+                <i class="bi bi-folder-x fs-1 d-block mb-2 text-secondary-subtle"></i>
+                <h6>No approval applications found</h6>
+                <p class="small text-muted mb-3">You have not initiated any applications yet.</p>
+                <a href="{% url 'create_application' %}" class="btn btn-primary btn-sm px-3">
+                  + Create Your First Application
+                </a>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Common Advisory Chips -->
+<div class="row g-3">
+  <div class="col-12">
+    <div class="card border-0 bg-primary-subtle text-primary p-3 rounded-4">
+      <div class="d-flex align-items-center gap-2">
+        <i class="bi bi-lightbulb-fill fs-5"></i>
+        <span class="fw-bold">Need Guidance on AICTE Norms?</span>
+        <button class="btn btn-sm btn-outline-primary ms-auto rounded-pill" data-bs-toggle="modal" data-bs-target="#chatbotModal">
+          Open FAQ Chatbot
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

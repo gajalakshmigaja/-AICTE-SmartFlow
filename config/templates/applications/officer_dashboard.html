@@ -1,0 +1,798 @@
+{% extends 'base.html' %}
+
+{% block title %}Scrutiny Officer Review Desk | AICTE SmartFlow{% endblock %}
+
+{% block breadcrumbs %}
+<nav aria-label="breadcrumb">
+  <ol class="breadcrumb mb-0 small">
+    <li class="breadcrumb-item"><a href="{% url 'dashboard' %}" class="text-decoration-none text-muted">SmartFlow</a></li>
+    <li class="breadcrumb-item text-muted">Regulatory Scrutiny</li>
+    <li class="breadcrumb-item active text-dark fw-semibold" aria-current="page">Scrutiny Desk</li>
+  </ol>
+</nav>
+{% endblock %}
+
+{% block extra_head %}
+<style>
+  /* Officer Dashboard Specific Styles */
+  .officer-header-card {
+    background: #ffffff;
+    border: 1px solid var(--sf-border);
+    border-radius: 14px;
+    padding: 24px 28px;
+    box-shadow: var(--sf-shadow-sm);
+  }
+
+  .stat-card {
+    background: #ffffff;
+    border: 1px solid var(--sf-border);
+    border-radius: 14px;
+    padding: 20px;
+    box-shadow: var(--sf-shadow-sm);
+    transition: all 0.18s ease-in-out;
+    text-decoration: none;
+    display: block;
+    color: inherit;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--sf-shadow-md);
+    border-color: var(--sf-slate-300);
+    color: inherit;
+  }
+
+  .stat-card.active-queue {
+    border-color: var(--sf-accent-blue);
+    background: linear-gradient(180deg, #ffffff 0%, #f0f7ff 100%);
+    box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.25), var(--sf-shadow-sm);
+  }
+
+  .stat-card-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    flex-shrink: 0;
+  }
+
+  .icon-awaiting {
+    background: #eff6ff;
+    color: #1d4ed8;
+  }
+
+  .icon-assigned {
+    background: #eef2ff;
+    color: #4338ca;
+  }
+
+  .icon-deficiency {
+    background: #fffbeb;
+    color: #b45309;
+  }
+
+  .icon-overdue {
+    background: #fef2f2;
+    color: #b91c1c;
+  }
+
+  .stat-value {
+    font-size: 2rem;
+    font-weight: 700;
+    line-height: 1.1;
+    letter-spacing: -0.5px;
+    color: var(--sf-navy-900);
+  }
+
+  /* Queue Segment Pills */
+  .queue-nav-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    border-bottom: 1px solid var(--sf-border);
+    padding-bottom: 14px;
+    margin-bottom: 18px;
+  }
+
+  .queue-pill {
+    padding: 7px 14px;
+    border-radius: 30px;
+    font-size: 0.84rem;
+    font-weight: 500;
+    text-decoration: none;
+    color: var(--sf-slate-600);
+    background: var(--sf-slate-100);
+    border: 1px solid transparent;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.15s;
+  }
+
+  .queue-pill:hover {
+    background: var(--sf-slate-200);
+    color: var(--sf-navy-900);
+  }
+
+  .queue-pill.active {
+    background: var(--sf-primary);
+    color: #ffffff;
+    font-weight: 600;
+    box-shadow: 0 2px 6px rgba(11, 59, 96, 0.25);
+  }
+
+  .queue-pill .badge {
+    font-size: 0.72rem;
+    font-weight: 600;
+  }
+
+  .queue-pill.active .badge {
+    background: rgba(255, 255, 255, 0.22) !important;
+    color: #ffffff !important;
+  }
+
+  /* Table styling */
+  .table-card {
+    background: #ffffff;
+    border: 1px solid var(--sf-border);
+    border-radius: 14px;
+    box-shadow: var(--sf-shadow-sm);
+    overflow: hidden;
+  }
+
+  .table-custom {
+    margin-bottom: 0;
+  }
+
+  .table-custom thead th {
+    background-color: #f8fafc;
+    color: var(--sf-text-muted);
+    font-size: 0.76rem;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    font-weight: 600;
+    padding: 13px 18px;
+    border-bottom: 1px solid var(--sf-border);
+    white-space: nowrap;
+  }
+
+  .table-custom tbody td {
+    padding: 14px 18px;
+    vertical-align: middle;
+    border-bottom: 1px solid #f1f5f9;
+    font-size: 0.88rem;
+  }
+
+  .table-custom tbody tr:last-child td {
+    border-bottom: none;
+  }
+
+  .table-custom tbody tr:hover {
+    background-color: #f8fafc;
+  }
+
+  .table-custom tbody tr.row-overdue {
+    background-color: #fffbfa;
+    border-left: 3px solid #dc2626;
+  }
+
+  .app-number-link {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-weight: 700;
+    color: var(--sf-primary);
+    text-decoration: none;
+    font-size: 0.90rem;
+  }
+
+  .app-number-link:hover {
+    color: var(--sf-accent-blue);
+    text-decoration: underline;
+  }
+
+  .officer-avatar-sm {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: #e2e8f0;
+    color: var(--sf-slate-700);
+    font-size: 0.72rem;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-transform: uppercase;
+  }
+
+  /* Pagination styles */
+  .pagination-container {
+    padding: 14px 20px;
+    border-top: 1px solid var(--sf-border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    background: #ffffff;
+  }
+
+  .pagination .page-link {
+    color: var(--sf-slate-700);
+    border: 1px solid var(--sf-border);
+    font-size: 0.84rem;
+    padding: 6px 12px;
+    border-radius: 6px;
+    margin: 0 2px;
+    font-weight: 500;
+  }
+
+  .pagination .page-link:hover {
+    background-color: var(--sf-slate-100);
+    color: var(--sf-navy-900);
+    border-color: var(--sf-slate-300);
+  }
+
+  .pagination .page-item.active .page-link {
+    background-color: var(--sf-primary);
+    border-color: var(--sf-primary);
+    color: #ffffff;
+    font-weight: 600;
+  }
+
+  .pagination .page-item.disabled .page-link {
+    color: var(--sf-text-light);
+    background-color: var(--sf-slate-50);
+  }
+
+  /* Form control tweaks */
+  .form-control-custom {
+    border: 1px solid var(--sf-border);
+    border-radius: 8px;
+    font-size: 0.88rem;
+    padding: 8px 14px;
+    transition: all 0.15s;
+  }
+
+  .form-control-custom:focus {
+    border-color: #93c5fd;
+    box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
+  }
+
+  /* Dark Theme Specific Overrides */
+  [data-bs-theme="dark"] .officer-header-card,
+  [data-bs-theme="dark"] .stat-card,
+  [data-bs-theme="dark"] .table-card {
+    background: var(--sf-surface);
+    border-color: var(--sf-border);
+  }
+
+  [data-bs-theme="dark"] .stat-card.active-queue {
+    background: linear-gradient(180deg, #111c38 0%, #172445 100%);
+    border-color: var(--sf-accent-blue);
+  }
+
+  [data-bs-theme="dark"] .stat-value {
+    color: #f8fafc;
+  }
+
+  [data-bs-theme="dark"] .icon-awaiting {
+    background: rgba(37, 99, 235, 0.2);
+    color: #60a5fa;
+  }
+
+  [data-bs-theme="dark"] .icon-assigned {
+    background: rgba(99, 102, 241, 0.2);
+    color: #818cf8;
+  }
+
+  [data-bs-theme="dark"] .icon-deficiency {
+    background: rgba(217, 119, 6, 0.2);
+    color: #fbbf24;
+  }
+
+  [data-bs-theme="dark"] .icon-overdue {
+    background: rgba(220, 38, 38, 0.2);
+    color: #f87171;
+  }
+
+  [data-bs-theme="dark"] .queue-pill {
+    background: #152244;
+    color: #94a3b8;
+    border-color: var(--sf-border);
+  }
+
+  [data-bs-theme="dark"] .queue-pill:hover {
+    background: #1d2d58;
+    color: #ffffff;
+  }
+
+  [data-bs-theme="dark"] .queue-pill.active {
+    background: var(--sf-primary);
+    color: #ffffff;
+  }
+
+  [data-bs-theme="dark"] .table-custom thead th {
+    background-color: #0d162d;
+    color: #94a3b8;
+    border-color: var(--sf-border);
+  }
+
+  [data-bs-theme="dark"] .table-custom tbody td {
+    border-color: #192545;
+    color: #e2e8f0;
+  }
+
+  [data-bs-theme="dark"] .table-custom tbody tr:hover {
+    background-color: #152244;
+  }
+
+  [data-bs-theme="dark"] .table-custom tbody tr.row-overdue {
+    background-color: rgba(220, 38, 38, 0.15);
+  }
+
+  [data-bs-theme="dark"] .app-number-link {
+    color: #38bdf8;
+  }
+
+  [data-bs-theme="dark"] .pagination-container {
+    background: var(--sf-surface);
+    border-color: var(--sf-border);
+  }
+
+  [data-bs-theme="dark"] .pagination .page-link {
+    background-color: #111c38;
+    border-color: var(--sf-border);
+    color: #cbd5e1;
+  }
+
+  [data-bs-theme="dark"] .pagination .page-link:hover {
+    background-color: #172445;
+    color: #ffffff;
+  }
+
+  [data-bs-theme="dark"] .pagination .page-item.active .page-link {
+    background-color: var(--sf-primary);
+    border-color: var(--sf-primary);
+    color: #ffffff;
+  }
+
+  [data-bs-theme="dark"] .pagination .page-item.disabled .page-link {
+    background-color: #0d162d;
+    color: #475569;
+  }
+
+  [data-bs-theme="dark"] .form-control-custom {
+    background-color: #0d162d;
+    border-color: var(--sf-border);
+    color: #f1f5f9;
+  }
+
+  [data-bs-theme="dark"] .form-control-custom:focus {
+    background-color: #111c38;
+    color: #f1f5f9;
+    border-color: #38bdf8;
+  }
+
+  [data-bs-theme="dark"] .card-header {
+    background-color: var(--sf-surface) !important;
+    border-color: var(--sf-border) !important;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-column gap-4">
+
+  <!-- Header Card -->
+  <div class="officer-header-card">
+    <div class="row align-items-center g-3">
+      <div class="col-lg-8">
+        <div class="d-flex align-items-center gap-2 mb-2">
+          <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2.5 py-1 rounded-pill small fw-semibold">
+            <i class="bi bi-shield-check me-1"></i>Regulatory Scrutiny Console
+          </span>
+          <span class="badge bg-light text-secondary border px-2.5 py-1 rounded-pill small">
+            Turnaround Target: 7 Business Days
+          </span>
+        </div>
+        <h3 class="fw-bold text-dark mb-1">Scrutiny Officer Review Desk</h3>
+        <p class="text-muted small mb-0">
+          Review institutional applications, inspect AI pre-checked statutory compliance documents, and record official scrutiny determinations.
+        </p>
+      </div>
+      <div class="col-lg-4 text-lg-end">
+        <div class="d-inline-flex flex-column align-items-lg-end gap-1">
+          <div class="d-flex align-items-center gap-2">
+            <div class="officer-avatar-sm" style="width: 34px; height: 34px; background: #e0f2fe; color: #0369a1; font-size: 0.85rem;">
+              {{ user.first_name|slice:":1"|default:user.username|slice:":1" }}{{ user.last_name|slice:":1" }}
+            </div>
+            <div class="text-start">
+              <div class="fw-bold small text-dark">{{ user.get_full_name|default:user.username }}</div>
+              <div class="text-muted" style="font-size: 0.72rem;">{{ user.profile.get_regional_office_display|default:"Regional Office Desk" }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Dashboard Overview KPI Cards (Real Data Only) -->
+  <div class="row g-3">
+    <!-- Card 1: Awaiting Review -->
+    <div class="col-sm-6 col-xl-3">
+      <a href="{% url 'officer_dashboard' %}?queue=awaiting" class="stat-card {% if queue_filter == 'awaiting' %}active-queue{% endif %}" title="Click to filter submitted applications">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+          <div>
+            <div class="text-muted small fw-semibold text-uppercase" style="letter-spacing: 0.5px; font-size: 0.74rem;">Awaiting Review</div>
+            <div class="stat-value text-primary mt-1">{{ total_awaiting }}</div>
+          </div>
+          <div class="stat-card-icon icon-awaiting">
+            <i class="bi bi-inbox-fill"></i>
+          </div>
+        </div>
+        <div class="small text-muted d-flex align-items-center justify-content-between">
+          <span>Submitted for assignment</span>
+          <i class="bi bi-chevron-right text-muted" style="font-size: 0.75rem;"></i>
+        </div>
+      </a>
+    </div>
+
+    <!-- Card 2: Under My Scrutiny -->
+    <div class="col-sm-6 col-xl-3">
+      <a href="{% url 'officer_dashboard' %}?queue=assigned" class="stat-card {% if queue_filter == 'assigned' %}active-queue{% endif %}" title="Click to filter applications assigned to you">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+          <div>
+            <div class="text-muted small fw-semibold text-uppercase" style="letter-spacing: 0.5px; font-size: 0.74rem;">Under Scrutiny</div>
+            <div class="stat-value text-info mt-1">{{ total_assigned }}</div>
+          </div>
+          <div class="stat-card-icon icon-assigned">
+            <i class="bi bi-clipboard2-check-fill"></i>
+          </div>
+        </div>
+        <div class="small text-muted d-flex align-items-center justify-content-between">
+          <span>Assigned to your desk</span>
+          <i class="bi bi-chevron-right text-muted" style="font-size: 0.75rem;"></i>
+        </div>
+      </a>
+    </div>
+
+    <!-- Card 3: Deficiencies Flagged -->
+    <div class="col-sm-6 col-xl-3">
+      <a href="{% url 'officer_dashboard' %}?queue=deficiency" class="stat-card {% if queue_filter == 'deficiency' %}active-queue{% endif %}" title="Click to filter deficiency-flagged applications">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+          <div>
+            <div class="text-muted small fw-semibold text-uppercase" style="letter-spacing: 0.5px; font-size: 0.74rem;">Deficiencies Flagged</div>
+            <div class="stat-value text-warning mt-1">{{ total_deficiencies }}</div>
+          </div>
+          <div class="stat-card-icon icon-deficiency">
+            <i class="bi bi-exclamation-triangle-fill"></i>
+          </div>
+        </div>
+        <div class="small text-muted d-flex align-items-center justify-content-between">
+          <span>Awaiting institute compliance</span>
+          <i class="bi bi-chevron-right text-muted" style="font-size: 0.75rem;"></i>
+        </div>
+      </a>
+    </div>
+
+    <!-- Card 4: Overdue SLA (>7d) -->
+    <div class="col-sm-6 col-xl-3">
+      <a href="{% url 'officer_dashboard' %}?queue=overdue" class="stat-card {% if queue_filter == 'overdue' %}active-queue{% endif %}" title="Click to filter overdue applications">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+          <div>
+            <div class="text-muted small fw-semibold text-uppercase" style="letter-spacing: 0.5px; font-size: 0.74rem;">Overdue SLA (&gt;7d)</div>
+            <div class="stat-value text-danger mt-1">{{ total_overdue }}</div>
+          </div>
+          <div class="stat-card-icon icon-overdue">
+            <i class="bi bi-alarm-fill"></i>
+          </div>
+        </div>
+        <div class="small text-muted d-flex align-items-center justify-content-between">
+          <span>Turnaround exceeded 7 days</span>
+          <i class="bi bi-chevron-right text-muted" style="font-size: 0.75rem;"></i>
+        </div>
+      </a>
+    </div>
+  </div>
+
+  <!-- Queue Filtering and Search Toolbar -->
+  <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+    <!-- Queue Segment Buttons -->
+    <div class="queue-nav-pills">
+      <a href="{% url 'officer_dashboard' %}?queue=all{% if search_query %}&q={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}" class="queue-pill {% if queue_filter == 'all' or not queue_filter %}active{% endif %}">
+        <i class="bi bi-grid-fill"></i>
+        <span>All Applications</span>
+        <span class="badge bg-light text-dark rounded-pill">{{ total_all }}</span>
+      </a>
+
+      <a href="{% url 'officer_dashboard' %}?queue=awaiting{% if search_query %}&q={{ search_query }}{% endif %}" class="queue-pill {% if queue_filter == 'awaiting' %}active{% endif %}">
+        <i class="bi bi-inbox-fill"></i>
+        <span>Awaiting Review</span>
+        <span class="badge bg-light text-dark rounded-pill">{{ total_awaiting }}</span>
+      </a>
+
+      <a href="{% url 'officer_dashboard' %}?queue=assigned{% if search_query %}&q={{ search_query }}{% endif %}" class="queue-pill {% if queue_filter == 'assigned' %}active{% endif %}">
+        <i class="bi bi-clipboard2-check-fill"></i>
+        <span>My Active Reviews</span>
+        <span class="badge bg-light text-dark rounded-pill">{{ total_assigned }}</span>
+      </a>
+
+      <a href="{% url 'officer_dashboard' %}?queue=deficiency{% if search_query %}&q={{ search_query }}{% endif %}" class="queue-pill {% if queue_filter == 'deficiency' %}active{% endif %}">
+        <i class="bi bi-exclamation-triangle-fill"></i>
+        <span>Deficiencies Flagged</span>
+        <span class="badge bg-light text-dark rounded-pill">{{ total_deficiencies }}</span>
+      </a>
+
+      <a href="{% url 'officer_dashboard' %}?queue=overdue{% if search_query %}&q={{ search_query }}{% endif %}" class="queue-pill {% if queue_filter == 'overdue' %}active{% endif %}">
+        <i class="bi bi-alarm-fill"></i>
+        <span>Overdue SLA</span>
+        <span class="badge bg-danger rounded-pill">{{ total_overdue }}</span>
+      </a>
+    </div>
+
+    <!-- Search & Filter Form -->
+    <form method="get" class="row g-2 align-items-center">
+      <!-- Retain active queue -->
+      <input type="hidden" name="queue" value="{{ queue_filter|default:'all' }}">
+
+      <!-- Search field -->
+      <div class="col-md-5">
+        <div class="input-group">
+          <span class="input-group-text bg-light border-end-0 text-muted"><i class="bi bi-search"></i></span>
+          <input type="text" name="q" value="{{ search_query }}" class="form-control form-control-custom border-start-0" placeholder="Search application ID (e.g. APP-...) or institution name...">
+        </div>
+      </div>
+
+      <!-- Status dropdown -->
+      <div class="col-md-4">
+        <select name="status" class="form-select form-control-custom">
+          <option value="">All Statuses</option>
+          <option value="SUBMITTED" {% if status_filter == 'SUBMITTED' %}selected{% endif %}>Submitted (Awaiting Scrutiny)</option>
+          <option value="IN_SCRUTINY" {% if status_filter == 'IN_SCRUTINY' %}selected{% endif %}>In Scrutiny (Active Review)</option>
+          <option value="DEFICIENCY_FLAGGED" {% if status_filter == 'DEFICIENCY_FLAGGED' %}selected{% endif %}>Deficiency Flagged</option>
+          <option value="APPROVED" {% if status_filter == 'APPROVED' %}selected{% endif %}>Approved</option>
+          <option value="REJECTED" {% if status_filter == 'REJECTED' %}selected{% endif %}>Rejected</option>
+        </select>
+      </div>
+
+      <!-- Action buttons -->
+      <div class="col-md-3 d-flex gap-2">
+        <button type="submit" class="btn btn-primary fw-semibold flex-grow-1" style="background-color: var(--sf-primary); border-color: var(--sf-primary);">
+          <i class="bi bi-funnel-fill me-1"></i> Filter
+        </button>
+        {% if status_filter or search_query or queue_filter != 'all' %}
+          <a href="{% url 'officer_dashboard' %}" class="btn btn-outline-secondary" title="Reset all filters">
+            <i class="bi bi-arrow-counterclockwise"></i> Reset
+          </a>
+        {% endif %}
+      </div>
+    </form>
+  </div>
+
+  <!-- Applications Table Card -->
+  <div class="table-card">
+    <div class="card-header bg-white py-3 px-4 d-flex flex-wrap justify-content-between align-items-center border-bottom gap-2">
+      <div class="d-flex align-items-center gap-2">
+        <h5 class="fw-bold mb-0 text-dark">Active Scrutiny Pipeline</h5>
+        <span class="badge bg-light text-secondary border rounded-pill">{{ total_filtered }} Record{{ total_filtered|pluralize }}</span>
+      </div>
+      <div class="text-muted small">
+        {% if queue_filter == 'awaiting' %}Showing submitted queue awaiting assignment
+        {% elif queue_filter == 'assigned' %}Showing cases under active review
+        {% elif queue_filter == 'deficiency' %}Showing deficiency-flagged cases
+        {% elif queue_filter == 'overdue' %}<span class="text-danger fw-semibold"><i class="bi bi-exclamation-circle me-1"></i>Priority SLA Overdue Queue</span>
+        {% else %}Showing complete application register
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Table Container -->
+    <div class="table-responsive">
+      <table class="table table-custom align-middle">
+        <thead>
+          <tr>
+            <th class="ps-4">Application ID</th>
+            <th>Institution</th>
+            <th>Type</th>
+            <th>Intake / Faculty</th>
+            <th>Status</th>
+            <th>Assigned Officer</th>
+            <th>Submitted On</th>
+            <th class="text-end pe-4">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for app in applications %}
+            <tr {% if app.is_overdue %}class="row-overdue"{% endif %}>
+              <td class="ps-4">
+                <a href="{% url 'officer_review' app.id %}" class="app-number-link d-inline-flex align-items-center gap-1">
+                  {{ app.application_number }}
+                </a>
+                {% if app.is_overdue %}
+                  <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-1.5 py-0.5 rounded-pill ms-1" style="font-size: 0.68rem;">
+                    <i class="bi bi-alarm me-0.5"></i>Overdue
+                  </span>
+                {% endif %}
+              </td>
+              <td>
+                <div class="fw-semibold text-dark">{{ app.institution_name }}</div>
+                <div class="text-muted" style="font-size: 0.76rem;">{{ app.institution.state|default:"Regional Jurisdiction" }}</div>
+              </td>
+              <td>
+                <span class="badge bg-light text-dark border fw-medium" style="font-size: 0.74rem;">
+                  {{ app.get_application_type_display }}
+                </span>
+              </td>
+              <td class="small">
+                <div><i class="bi bi-mortarboard text-muted me-1"></i><strong>{{ app.total_intake }}</strong> seats</div>
+                <div class="text-muted"><i class="bi bi-people text-muted me-1"></i>{{ app.total_faculty }} faculty</div>
+              </td>
+              <td>
+                <span class="badge-status status-{{ app.status }}">
+                  <span style="display:inline-block; width:6px; height:6px; border-radius:50%; background:currentColor;"></span>
+                  {{ app.get_status_display }}
+                </span>
+              </td>
+              <td class="small">
+                {% if app.assigned_officer %}
+                  <div class="d-flex align-items-center gap-1.5">
+                    <span class="officer-avatar-sm">
+                      {{ app.assigned_officer.first_name|slice:":1"|default:app.assigned_officer.username|slice:":1" }}
+                    </span>
+                    <span class="text-dark fw-medium">
+                      {{ app.assigned_officer.get_full_name|default:app.assigned_officer.username }}
+                    </span>
+                  </div>
+                {% else %}
+                  <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle fw-normal">
+                    <i class="bi bi-person-dash me-1"></i>Unassigned
+                  </span>
+                {% endif %}
+              </td>
+              <td class="small text-muted">
+                <div>
+                  {% if app.submitted_at %}
+                    {{ app.submitted_at|date:"d M Y" }}
+                  {% else %}
+                    {{ app.created_at|date:"d M Y" }}
+                  {% endif %}
+                </div>
+                <div style="font-size: 0.72rem;">
+                  {% if app.submitted_at %}
+                    {{ app.submitted_at|timesince }} ago
+                  {% else %}
+                    {{ app.created_at|timesince }} ago
+                  {% endif %}
+                </div>
+              </td>
+              <td class="text-end pe-4">
+                <a href="{% url 'officer_review' app.id %}" class="btn btn-sm btn-primary fw-semibold px-3 py-1.5 rounded-3 d-inline-flex align-items-center gap-1" style="background-color: var(--sf-primary); border-color: var(--sf-primary);">
+                  <i class="bi bi-clipboard2-check"></i>
+                  <span>Review</span>
+                </a>
+              </td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="8" class="text-center py-5">
+                <div class="py-4">
+                  <div class="mb-3">
+                    <i class="bi bi-folder2-open display-4 text-secondary-subtle"></i>
+                  </div>
+                  <h6 class="fw-bold text-dark mb-1">No Applications Found</h6>
+                  <p class="text-muted small mb-3">
+                    There are no applications matching the selected queue filter or search parameters.
+                  </p>
+                  {% if status_filter or search_query or queue_filter != 'all' %}
+                    <a href="{% url 'officer_dashboard' %}" class="btn btn-sm btn-outline-primary px-3">
+                      <i class="bi bi-arrow-counterclockwise me-1"></i> Reset Filters
+                    </a>
+                  {% endif %}
+                </div>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination Footer -->
+    {% if page_obj.paginator.num_pages > 1 %}
+      <div class="pagination-container">
+        <div class="small text-muted">
+          Showing <strong>{{ page_obj.start_index }}</strong> to <strong>{{ page_obj.end_index }}</strong> of <strong>{{ total_filtered }}</strong> applications
+        </div>
+
+        <nav aria-label="Application table pages">
+          <ul class="pagination pagination-sm mb-0">
+            <!-- Previous Button -->
+            {% if page_obj.has_previous %}
+              <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if queue_filter %}&queue={{ queue_filter }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}" aria-label="Previous">
+                  <i class="bi bi-chevron-left"></i> Previous
+                </a>
+              </li>
+            {% else %}
+              <li class="page-item disabled">
+                <span class="page-link"><i class="bi bi-chevron-left"></i> Previous</span>
+              </li>
+            {% endif %}
+
+            <!-- Page Number Items -->
+            {% for num in page_obj.paginator.page_range %}
+              {% if num == page_obj.number %}
+                <li class="page-item active" aria-current="page">
+                  <span class="page-link">{{ num }}</span>
+                </li>
+              {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                <li class="page-item">
+                  <a class="page-link" href="?page={{ num }}{% if queue_filter %}&queue={{ queue_filter }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">{{ num }}</a>
+                </li>
+              {% endif %}
+            {% endfor %}
+
+            <!-- Next Button -->
+            {% if page_obj.has_next %}
+              <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if queue_filter %}&queue={{ queue_filter }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}" aria-label="Next">
+                  Next <i class="bi bi-chevron-right"></i>
+                </a>
+              </li>
+            {% else %}
+              <li class="page-item disabled">
+                <span class="page-link">Next <i class="bi bi-chevron-right"></i></span>
+              </li>
+            {% endif %}
+          </ul>
+        </nav>
+      </div>
+    {% elif applications %}
+      <div class="px-4 py-3 bg-white border-top small text-muted d-flex justify-content-between align-items-center">
+        <span>Showing all <strong>{{ total_filtered }}</strong> applications in this view</span>
+        <span>Page 1 of 1</span>
+      </div>
+    {% endif %}
+  </div>
+
+  <!-- Regulatory Scrutiny Standards Reference Guide -->
+  <div class="card border-0 shadow-sm rounded-4 bg-white p-4">
+    <div class="d-flex align-items-center justify-content-between mb-3">
+      <div class="d-flex align-items-center gap-2">
+        <i class="bi bi-journal-text fs-5 text-primary"></i>
+        <h6 class="fw-bold text-dark mb-0">AICTE Regulatory Scrutiny Standards & Guidelines</h6>
+      </div>
+      <button class="btn btn-sm btn-outline-secondary rounded-pill py-0 px-2.5" type="button" data-bs-toggle="collapse" data-bs-target="#guidelinesCollapse" aria-expanded="false" aria-controls="guidelinesCollapse">
+        Toggle Details
+      </button>
+    </div>
+
+    <div class="collapse show" id="guidelinesCollapse">
+      <div class="row g-3 small text-muted">
+        <div class="col-md-4">
+          <div class="p-3 bg-light rounded-3 h-100 border">
+            <div class="fw-bold text-dark mb-1"><i class="bi bi-clock-history me-1 text-primary"></i>7-Day Scrutiny SLA</div>
+            Applications in <code>SUBMITTED</code> status must be assigned and have preliminary document scrutiny initiated within 7 business days from submission date.
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="p-3 bg-light rounded-3 h-100 border">
+            <div class="fw-bold text-dark mb-1"><i class="bi bi-cpu me-1 text-info"></i>AI Pre-Check Verification</div>
+            Automated PyMuPDF findings provide heuristic guidance on land title, built-up area, and certificate validity dates. The officer must perform independent verification.
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="p-3 bg-light rounded-3 h-100 border">
+            <div class="fw-bold text-dark mb-1"><i class="bi bi-flag me-1 text-warning"></i>Deficiency Resolution</div>
+            Flag specific non-compliances under <code>DEFICIENCY_FLAGGED</code>. Once the applicant re-uploads certified documents, the application returns to active review.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

@@ -1,0 +1,87 @@
+{% extends 'base.html' %}
+
+{% block title %}System Audit Trail | AICTE SmartFlow{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2">
+  <div>
+    <h3 class="fw-bold mb-1">System & Regulatory Audit Trail</h3>
+    <p class="text-muted small mb-0">Immutable chronological record of logins, status transitions, document modifications, and regulatory determinations.</p>
+  </div>
+  <span class="badge bg-dark px-3 py-2 fs-6"><i class="bi bi-shield-lock me-1"></i> Governance Compliance</span>
+</div>
+
+<!-- Search and Filter Bar -->
+<div class="card border-0 shadow-sm rounded-4 p-3 bg-white mb-4">
+  <form method="get" class="row g-2 align-items-center">
+    <div class="col-md-5">
+      <div class="input-group">
+        <span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted"></i></span>
+        <input type="text" name="q" value="{{ search_query }}" class="form-control border-start-0" placeholder="Search event summary or application ID...">
+      </div>
+    </div>
+    <div class="col-md-4">
+      <select name="action" class="form-select">
+        <option value="">All Action Types</option>
+        {% for code, label in action_choices %}
+          <option value="{{ code }}" {% if selected_action == code %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-3 d-flex gap-2">
+      <button type="submit" class="btn btn-primary flex-grow-1 fw-semibold">Filter Logs</button>
+      {% if selected_action or search_query %}
+        <a href="{% url 'audit_log_list' %}" class="btn btn-outline-secondary">Reset</a>
+      {% endif %}
+    </div>
+  </form>
+</div>
+
+<!-- Audit Log Table -->
+<div class="card border-0 shadow-sm rounded-4 bg-white mb-4">
+  <div class="card-header bg-transparent py-3 px-4 d-flex justify-content-between align-items-center border-bottom">
+    <h5 class="fw-bold mb-0">Recorded Operational Events</h5>
+    <span class="badge bg-light text-dark border">{{ logs.count }} Entries</span>
+  </div>
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0 small">
+        <thead class="table-light">
+          <tr>
+            <th class="ps-4">Timestamp (UTC)</th>
+            <th>Action</th>
+            <th>Actor</th>
+            <th>Target</th>
+            <th>Event Summary</th>
+            <th>IP Address</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for log in logs %}
+            <tr>
+              <td class="ps-4 font-monospace text-muted">{{ log.timestamp|date:"d M Y, H:i:s" }}</td>
+              <td>
+                <span class="badge bg-light text-dark border">{{ log.get_action_display }}</span>
+              </td>
+              <td class="fw-semibold">
+                {{ log.actor.username|default:"System" }}
+              </td>
+              <td class="font-monospace text-primary">
+                {{ log.target_model }}: {{ log.target_id }}
+              </td>
+              <td>{{ log.summary }}</td>
+              <td class="text-muted font-monospace">{{ log.ip_address|default:"-" }}</td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="6" class="text-center py-4 text-muted">
+                No audit log records found matching query.
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

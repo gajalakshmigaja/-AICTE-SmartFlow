@@ -1,0 +1,385 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ application.application_number }} | AICTE SmartFlow{% endblock %}
+
+{% block content %}
+<!-- Application Header Bar -->
+<div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
+  <div class="d-flex flex-wrap justify-content-between align-items-start gap-3">
+    <div>
+      <div class="d-flex align-items-center gap-2 mb-1">
+        <span class="badge bg-light text-dark border">{{ application.academic_year }}</span>
+        <span class="badge bg-secondary-subtle text-secondary">{{ application.get_application_type_display }}</span>
+      </div>
+      <h3 class="fw-bold mb-1 text-primary">{{ application.application_number }}</h3>
+      <h5 class="text-dark mb-2">{{ application.institution_name }}</h5>
+      <div class="small text-muted d-flex flex-wrap gap-3">
+        <span><i class="bi bi-calendar-event me-1"></i>Created: {{ application.created_at|date:"d M Y, H:i" }}</span>
+        {% if application.submitted_at %}
+          <span><i class="bi bi-send-check me-1"></i>Submitted: {{ application.submitted_at|date:"d M Y, H:i" }}</span>
+        {% endif %}
+        {% if application.assigned_officer %}
+          <span><i class="bi bi-person-check me-1"></i>Assigned Officer: {{ application.assigned_officer.get_full_name|default:application.assigned_officer.username }}</span>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Status & Primary Action Button -->
+    <div class="text-end">
+      <div class="mb-2">
+        <span class="badge-status status-{{ application.status }} fs-6 px-3 py-2">
+          {{ application.get_status_display }}
+        </span>
+      </div>
+
+      {% if application.status == 'DRAFT' and user == application.applicant %}
+        <a href="{% url 'edit_application' application.id %}" class="btn btn-outline-primary fw-semibold px-3 me-2">
+          <i class="bi bi-pencil me-1"></i> Edit Draft
+        </a>
+        <form method="post" action="{% url 'submit_application' application.id %}">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-primary fw-semibold px-4 shadow-sm" onclick="return confirm('Submit this application to the SmartFlow review workflow?');">
+            <i class="bi bi-send me-1"></i> Submit Application
+          </button>
+        </form>
+      {% elif application.status == 'DEFICIENCY_FLAGGED' and user == application.applicant %}
+        <a href="#deficiencyResponseCard" class="btn btn-warning fw-semibold px-4 text-dark shadow-sm">
+          <i class="bi bi-exclamation-triangle me-1"></i> Address Deficiencies
+        </a>
+      {% endif %}
+
+      {% if is_staff_user %}
+        <a href="{% url 'officer_review' application.id %}" class="btn btn-outline-primary ms-2">
+          <i class="bi bi-clipboard-check me-1"></i> Scrutiny Desk
+        </a>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Visual Workflow Progress Steps -->
+  <div class="mt-4 pt-3 border-top">
+    <div class="d-flex justify-content-between text-center small text-muted">
+      <div class="{% if application.status != 'DRAFT' %}text-primary fw-bold{% endif %}">
+        <i class="bi bi-check-circle-fill d-block fs-5"></i> 1. Draft Initialized
+      </div>
+      <div class="{% if application.status in 'SUBMITTED,IN_SCRUTINY,DEFICIENCY_FLAGGED,APPROVED,REJECTED' %}text-primary fw-bold{% endif %}">
+        <i class="bi {% if application.status in 'SUBMITTED,IN_SCRUTINY,DEFICIENCY_FLAGGED,APPROVED,REJECTED' %}bi-check-circle-fill{% else %}bi-circle{% endif %} d-block fs-5"></i> 2. Formally Submitted
+      </div>
+      <div class="{% if application.status in 'IN_SCRUTINY,DEFICIENCY_FLAGGED,APPROVED,REJECTED' %}text-primary fw-bold{% endif %}">
+        <i class="bi {% if application.status in 'IN_SCRUTINY,DEFICIENCY_FLAGGED,APPROVED,REJECTED' %}bi-check-circle-fill{% else %}bi-circle{% endif %} d-block fs-5"></i> 3. Regulatory Scrutiny
+      </div>
+      <div class="{% if application.status in 'APPROVED,REJECTED' %}text-success fw-bold{% elif application.status == 'DEFICIENCY_FLAGGED' %}text-warning fw-bold{% endif %}">
+        <i class="bi {% if application.status == 'APPROVED' %}bi-patch-check-fill text-success{% elif application.status == 'REJECTED' %}bi-x-circle-fill text-danger{% elif application.status == 'DEFICIENCY_FLAGGED' %}bi-exclamation-circle-fill text-warning{% else %}bi-circle{% endif %} d-block fs-5"></i> 4. Final Determination
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Deficiency Alert Banner if Applicable -->
+{% if application.status == 'DEFICIENCY_FLAGGED' %}
+  <div class="alert alert-warning border-warning shadow-sm rounded-4 p-4 mb-4" id="deficiencyResponseCard">
+    <div class="d-flex align-items-start gap-3">
+      <i class="bi bi-exclamation-triangle-fill fs-2 text-warning"></i>
+      <div class="flex-grow-1">
+        <h5 class="fw-bold text-dark mb-1">Deficiencies Flagged by Scrutiny Officer</h5>
+        <p class="text-dark mb-2"><strong>Reviewer Notes:</strong> {{ application.deficiency_notes|linebreaksbr }}</p>
+        <p class="small text-muted mb-3">Please upload replacement documents where needed, update profile data, and submit your item-wise clarification below.</p>
+
+        {% if user == application.applicant or user.is_superuser %}
+          <form method="post" action="{% url 'respond_deficiency' application.id %}">
+            {% csrf_token %}
+            <div class="mb-3">
+              <label class="form-label fw-semibold small text-dark">Your Clarification Response *</label>
+              {{ deficiency_form.clarification_response }}
+            </div>
+            <button type="submit" class="btn btn-warning fw-semibold px-4 text-dark">
+              <i class="bi bi-arrow-repeat me-1"></i> Submit Clarification Response
+            </button>
+          </form>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+{% endif %}
+
+<!-- Nav Tabs for Deep Sections -->
+<ul class="nav nav-pills mb-4 gap-2" id="applicationTabs" role="tablist">
+  <li class="nav-item">
+    <button class="nav-link active px-4 py-2 rounded-pill fw-semibold" id="docs-tab" data-bs-toggle="tab" data-bs-target="#docs-pane" type="button">
+      <i class="bi bi-files me-1"></i> Documents ({{ documents.count }})
+    </button>
+  </li>
+  <li class="nav-item">
+    <button class="nav-link px-4 py-2 rounded-pill fw-semibold" id="compliance-tab" data-bs-toggle="tab" data-bs-target="#compliance-pane" type="button">
+      <i class="bi bi-shield-check me-1"></i> Compliance Report ({{ compliance_results.count }})
+    </button>
+  </li>
+  <li class="nav-item">
+    <button class="nav-link px-4 py-2 rounded-pill fw-semibold" id="institution-tab" data-bs-toggle="tab" data-bs-target="#institution-pane" type="button">
+      <i class="bi bi-building me-1"></i> Institution & Infrastructure
+    </button>
+  </li>
+  <li class="nav-item">
+    <button class="nav-link px-4 py-2 rounded-pill fw-semibold" id="history-tab" data-bs-toggle="tab" data-bs-target="#history-pane" type="button">
+      <i class="bi bi-clock-history me-1"></i> Workflow Timeline ({{ history.count }})
+    </button>
+  </li>
+</ul>
+
+<div class="tab-content" id="applicationTabsContent">
+  <!-- TAB 1: DOCUMENTS -->
+  <div class="tab-pane fade show active" id="docs-pane" role="tabpanel">
+    <div class="card border-0 shadow-sm rounded-4 bg-white mb-4">
+      <div class="card-header bg-transparent py-3 px-4 d-flex justify-content-between align-items-center border-bottom">
+        <div>
+          <h5 class="fw-bold mb-0">Mandatory Supporting Documents</h5>
+          <small class="text-muted">Upload supporting records for this application; verify requirements against current official guidance.</small>
+        </div>
+        {% if application.can_edit %}
+          {% if user == application.applicant or user.is_superuser %}
+            <a href="{% url 'upload_document' application.id %}" class="btn btn-sm btn-primary fw-semibold">
+              <i class="bi bi-cloud-arrow-up me-1"></i> Upload Document
+            </a>
+          {% endif %}
+        {% endif %}
+      </div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+              <tr>
+                <th class="ps-4">Document Category</th>
+                <th>Title / File</th>
+                <th>Version</th>
+                <th>Verification Status</th>
+                <th>AI Pre-Check</th>
+                <th>Reviewer Comments</th>
+                <th class="text-end pe-4">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for doc in documents %}
+                <tr>
+                  <td class="ps-4 fw-semibold text-dark">
+                    {{ doc.get_document_type_display }}
+                    {% if doc.expiry_date %}
+                      <div class="small text-muted"><i class="bi bi-calendar me-1"></i>Expires: {{ doc.expiry_date|date:"d M Y" }}</div>
+                    {% endif %}
+                  </td>
+                  <td>
+                    <div class="fw-medium">{{ doc.title }}</div>
+                    <div class="small text-muted">
+                      {{ doc.file_size|filesizeformat }} &bull; SHA256: <code>{{ doc.file_hash|slice:":10" }}...</code>
+                    </div>
+                  </td>
+                  <td><span class="badge bg-light text-secondary border">v{{ doc.version }}</span></td>
+                  <td>
+                    {% if doc.verification_status == 'VERIFIED' %}
+                      <span class="badge bg-success-subtle text-success"><i class="bi bi-check-circle me-1"></i>Verified</span>
+                    {% elif doc.verification_status == 'DEFICIENT' %}
+                      <span class="badge bg-warning-subtle text-warning"><i class="bi bi-exclamation-circle me-1"></i>Deficient</span>
+                    {% elif doc.verification_status == 'REJECTED' %}
+                      <span class="badge bg-danger-subtle text-danger"><i class="bi bi-x-circle me-1"></i>Rejected</span>
+                    {% else %}
+                      <span class="badge bg-secondary-subtle text-secondary"><i class="bi bi-clock me-1"></i>Pending</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    {% if doc.ai_analysis %}
+                      {% if doc.ai_analysis.status == 'PASS' %}
+                        <span class="badge bg-success-subtle text-success" title="Confidence: {{ doc.ai_analysis.confidence_score|floatformat:2 }}">
+                          <i class="bi bi-robot me-1"></i>Pass ({{ doc.ai_analysis.confidence_score|floatformat:2 }})
+                        </span>
+                      {% elif doc.ai_analysis.status == 'MISMATCH_DETECTED' %}
+                        <span class="badge bg-danger-subtle text-danger" title="{{ doc.ai_analysis.findings.0.message }}">
+                          <i class="bi bi-robot me-1"></i>Mismatch
+                        </span>
+                      {% else %}
+                        <span class="badge bg-warning-subtle text-warning">
+                          <i class="bi bi-robot me-1"></i>Manual Check
+                        </span>
+                      {% endif %}
+                    {% else %}
+                      <form method="post" action="{% url 'run_ai_analysis' doc.id %}" class="d-inline">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-xs btn-outline-info py-0 px-2" style="font-size:0.75rem;">
+                          <i class="bi bi-robot me-1"></i>Run AI Check
+                        </button>
+                      </form>
+                    {% endif %}
+                  </td>
+                  <td class="small text-muted">
+                    {{ doc.reviewer_comments|default:"-" }}
+                  </td>
+                  <td class="text-end pe-4">
+                    <div class="btn-group">
+                      <a href="{% url 'download_document' doc.id %}" class="btn btn-sm btn-outline-secondary" title="Secure Download" target="_blank">
+                        <i class="bi bi-download"></i>
+                      </a>
+                      {% if application.can_edit %}
+                        {% if user == application.applicant or user.is_superuser %}
+                          <a href="{% url 'replace_document' doc.id %}" class="btn btn-sm btn-outline-warning" title="Replace Document">
+                            <i class="bi bi-arrow-repeat"></i> Replace
+                          </a>
+                        {% endif %}
+                      {% endif %}
+                    </div>
+                  </td>
+                </tr>
+              {% empty %}
+                <tr>
+                  <td colspan="7" class="text-center py-4 text-muted">
+                    <i class="bi bi-file-earmark-arrow-up fs-2 d-block mb-1 text-secondary-subtle"></i>
+                    No documents uploaded yet. Review the applicable verified rules and officer requests for supporting records.
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 2: COMPLIANCE REPORT -->
+  <div class="tab-pane fade" id="compliance-pane" role="tabpanel">
+    <div class="card border-0 shadow-sm rounded-4 bg-white mb-4">
+      <div class="card-header bg-transparent py-3 px-4 d-flex justify-content-between align-items-center border-bottom">
+        <div>
+          <h5 class="fw-bold mb-0">Automated Regulatory Compliance Audit</h5>
+          <small class="text-muted">Active source-verified rules are automated; other items require manual scrutiny.</small>
+        </div>
+        <form method="post" action="{% url 'run_compliance' application.id %}">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-sm btn-outline-primary">
+            <i class="bi bi-arrow-clockwise me-1"></i> Re-evaluate Compliance
+          </button>
+        </form>
+      </div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+              <tr>
+                <th class="ps-4">Rule / Parameter</th>
+                <th>Category</th>
+                <th>Status</th>
+                <th>Evaluation Explanation</th>
+                <th>Regulatory Reference</th>
+                <th>Corrective Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for res in compliance_results %}
+                <tr>
+                  <td class="ps-4 fw-bold text-dark">
+                    {{ res.check_name }}
+                    <div class="small text-muted">{{ res.evidence_field }}</div>
+                  </td>
+                  <td><span class="badge bg-light text-secondary border">{{ res.category }}</span></td>
+                  <td>
+                    {% if res.status == 'PASS' %}
+                      <span class="badge bg-success-subtle text-success px-2 py-1"><i class="bi bi-check-circle me-1"></i>Pass</span>
+                    {% elif res.status == 'WARNING' %}
+                      <span class="badge bg-warning-subtle text-warning px-2 py-1"><i class="bi bi-exclamation-circle me-1"></i>Warning</span>
+                    {% elif res.status == 'FAIL' %}
+                      <span class="badge bg-danger-subtle text-danger px-2 py-1"><i class="bi bi-x-circle me-1"></i>Fail</span>
+                    {% else %}
+                      <span class="badge bg-info-subtle text-info px-2 py-1"><i class="bi bi-search me-1"></i>Manual Review</span>
+                    {% endif %}
+                  </td>
+                  <td class="small">{{ res.explanation }}</td>
+                  <td class="small text-muted"><i class="bi bi-book me-1"></i>{{ res.regulatory_reference }}</td>
+                  <td class="small text-primary fw-medium">{{ res.suggested_action|default:"None required" }}</td>
+                </tr>
+              {% empty %}
+                <tr>
+                  <td colspan="6" class="text-center py-4 text-muted">
+                    No compliance evaluation records. Click "Re-evaluate Compliance" above.
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 3: INSTITUTION & INFRASTRUCTURE -->
+  <div class="tab-pane fade" id="institution-pane" role="tabpanel">
+    {% if institution %}
+      <div class="row g-4 mb-4">
+        <div class="col-md-6">
+          <div class="card border-0 shadow-sm rounded-4 p-4 bg-white h-100">
+            <h5 class="fw-bold mb-3 text-secondary"><i class="bi bi-geo-alt me-2"></i>Campus & Land Details</h5>
+            <table class="table table-sm table-borderless">
+              <tr><th class="text-muted" style="width:40%;">Institution Name:</th><td class="fw-semibold">{{ institution.name }}</td></tr>
+              <tr><th class="text-muted">Type:</th><td>{{ institution.get_institution_type_display }}</td></tr>
+              <tr><th class="text-muted">Location:</th><td>{{ institution.district }}, {{ institution.state }} ({{ institution.pincode }})</td></tr>
+              <tr><th class="text-muted">Total Land Area:</th><td class="fw-bold text-primary">{{ institution.land_area_acres }} Acres</td></tr>
+              <tr><th class="text-muted">Instructional Built-up:</th><td class="fw-bold text-primary">{{ institution.built_up_area_sqm|floatformat:0 }} Sq. Meters</td></tr>
+              <tr><th class="text-muted">Land Ownership:</th><td>{{ institution.get_land_ownership_type_display }}</td></tr>
+            </table>
+          </div>
+        </div>
+
+        <div class="col-md-6">
+          <div class="card border-0 shadow-sm rounded-4 p-4 bg-white h-100">
+            <h5 class="fw-bold mb-3 text-secondary"><i class="bi bi-book me-2"></i>Library & Laboratories</h5>
+            <table class="table table-sm table-borderless">
+              <tr><th class="text-muted" style="width:45%;">Library Volumes:</th><td class="fw-bold">{{ institution.library_volumes }}</td></tr>
+              <tr><th class="text-muted">Library Book Titles:</th><td>{{ institution.library_titles }}</td></tr>
+              <tr><th class="text-muted">National Journals:</th><td>{{ institution.national_journals }}</td></tr>
+              <tr><th class="text-muted">Specialized Laboratories:</th><td class="fw-bold">{{ institution.total_laboratories }}</td></tr>
+              <tr><th class="text-muted">Student Computing Nodes:</th><td>{{ institution.computer_terminals }}</td></tr>
+              <tr><th class="text-muted">Internet Bandwidth:</th><td>{{ institution.internet_bandwidth_mbps }} Mbps</td></tr>
+            </table>
+          </div>
+        </div>
+      </div>
+    {% else %}
+      <div class="alert alert-info rounded-4">
+        Institution profile not yet linked. You can update your institution details in the <a href="{% url 'institution_profile' %}">Institution Profile tab</a>.
+      </div>
+    {% endif %}
+  </div>
+
+  <!-- TAB 4: WORKFLOW TIMELINE & AUDIT HISTORY -->
+  <div class="tab-pane fade" id="history-pane" role="tabpanel">
+    <div class="card border-0 shadow-sm rounded-4 bg-white p-4 mb-4">
+      <h5 class="fw-bold mb-4">Application Chronological History</h5>
+      <div class="timeline position-relative ps-4" style="border-left: 2px solid #e2e8f0;">
+        {% for event in history %}
+          <div class="timeline-item mb-4 position-relative">
+            <div class="position-absolute bg-primary rounded-circle" style="width: 12px; height: 12px; left: -23px; top: 6px;"></div>
+            <div class="d-flex justify-content-between align-items-center">
+              <h6 class="fw-bold mb-1 text-dark">
+                {{ event.previous_status }} &rarr; <span class="badge-status status-{{ event.new_status }} py-1 px-2">{{ event.new_status }}</span>
+              </h6>
+              <small class="text-muted">{{ event.created_at|date:"d M Y, H:i" }}</small>
+            </div>
+            <div class="small text-secondary mb-1">
+              <strong>Actor:</strong>
+              {% if event.action_by %}
+                {{ event.action_by.get_full_name|default:event.action_by.username }}
+              {% else %}
+                System
+              {% endif %}
+              &bull;
+              <strong>Action Type:</strong> {{ event.action_type }}
+            </div>
+            {% if event.comments %}
+              <div class="p-2 bg-light rounded text-muted small border">
+                {{ event.comments }}
+              </div>
+            {% endif %}
+          </div>
+        {% empty %}
+          <div class="text-muted small">No history recorded yet.</div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,171 @@
+{% extends 'base.html' %}
+
+{% block title %}Institution Campus & Infrastructure | AICTE SmartFlow{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2">
+  <div>
+    <h3 class="fw-bold mb-1">Institution Campus & Infrastructure Profile</h3>
+    <p class="text-muted small mb-0">Maintain institution-declared campus, land, and academic infrastructure details for application review.</p>
+  </div>
+  <div class="d-flex gap-2">
+    <a href="{% url 'manage_courses' %}" class="btn btn-outline-primary">
+      <i class="bi bi-mortarboard me-1"></i> Manage Courses
+    </a>
+    <a href="{% url 'manage_faculty' %}" class="btn btn-outline-primary">
+      <i class="bi bi-people me-1"></i> Manage Faculty
+    </a>
+  </div>
+</div>
+
+<div class="card shadow-sm border-0 rounded-4 p-4 p-md-5 bg-white mb-4">
+  <form method="post">
+    {% csrf_token %}
+    {{ form.non_field_errors }}
+    {% if form.errors %}
+      <div class="alert alert-danger">Please complete the required institution details and correct the highlighted fields.</div>
+    {% endif %}
+
+    <h5 class="fw-bold text-primary mb-3"><i class="bi bi-building me-2"></i>1. Basic Institution Information</h5>
+    <div class="row mb-3">
+      <div class="col-md-8">
+        <label class="form-label small fw-semibold">Institution Name *</label>
+        {{ form.name }}
+        {{ form.name.errors }}
+      </div>
+      <div class="col-md-4">
+        <label class="form-label small fw-semibold">Permanent AICTE PID</label>
+        {{ form.aicte_id }}
+      </div>
+    </div>
+
+    <div class="row mb-3">
+      <div class="col-md-6">
+        <label class="form-label small fw-semibold">Institution Type *</label>
+        {{ form.institution_type }}
+        {{ form.institution_type.errors }}
+      </div>
+      <div class="col-md-6">
+        <label class="form-label small fw-semibold">Establishment Year</label>
+        {{ form.establishment_year }}
+      </div>
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label small fw-semibold">Campus Postal Address</label>
+      {{ form.address }}
+    </div>
+
+    <div class="row mb-3">
+      <div class="col-md-4">
+        <label class="form-label small fw-semibold">State *</label>
+        {{ form.state }}
+        {{ form.state.errors }}
+      </div>
+      <div class="col-md-4">
+        <label class="form-label small fw-semibold">District *</label>
+        {{ form.district }}
+        {{ form.district.errors }}
+      </div>
+      <div class="col-md-4">
+        <label class="form-label small fw-semibold">PIN Code</label>
+        {{ form.pincode }}
+      </div>
+    </div>
+
+    <div class="row mb-4">
+      <div class="col-md-4">
+        <label class="form-label small fw-semibold">Official Contact Email</label>
+        {{ form.contact_email }}
+      </div>
+      <div class="col-md-4">
+        <label class="form-label small fw-semibold">Contact Telephone</label>
+        {{ form.contact_phone }}
+      </div>
+      <div class="col-md-4">
+        <label class="form-label small fw-semibold">Official Website</label>
+        {{ form.website }}
+      </div>
+    </div>
+
+    <hr class="my-4">
+
+    <h5 class="fw-bold text-primary mb-3"><i class="bi bi-geo-alt me-2"></i>2. Land & Instructional Building Norms</h5>
+    <div class="row mb-3">
+      <div class="col-md-6">
+        <label class="form-label small fw-semibold">Total Land Area (Acres) *</label>
+        {{ form.land_area_acres }}
+        {{ form.land_area_acres.errors }}
+        <div class="form-text small">Check the current applicable requirements; no default regulatory threshold is assumed.</div>
+      </div>
+      <div class="col-md-6">
+        <label class="form-label small fw-semibold">Total Built-Up Area (Sq. Meters) *</label>
+        {{ form.built_up_area_sqm }}
+        {{ form.built_up_area_sqm.errors }}
+        <div class="form-text small">Instructional, administrative, and amenities area.</div>
+      </div>
+    </div>
+
+    <div class="row mb-4">
+      <div class="col-md-6">
+        <label class="form-label small fw-semibold">Land Ownership Nature *</label>
+        {{ form.land_ownership_type }}
+        {{ form.land_ownership_type.errors }}
+      </div>
+      <div class="col-md-6">
+        <label class="form-label small fw-semibold">Land Registration / Patta Number</label>
+        {{ form.land_registration_number }}
+      </div>
+    </div>
+
+    <hr class="my-4">
+
+    <h5 class="fw-bold text-primary mb-3"><i class="bi bi-book me-2"></i>3. Academic Facilities & Computing Setup</h5>
+    <div class="row mb-3">
+      <div class="col-md-3">
+        <label class="form-label small fw-semibold">Library Book Titles</label>
+        {{ form.library_titles }}
+      </div>
+      <div class="col-md-3">
+        <label class="form-label small fw-semibold">Library Book Volumes</label>
+        {{ form.library_volumes }}
+      </div>
+      <div class="col-md-3">
+        <label class="form-label small fw-semibold">National Journals</label>
+        {{ form.national_journals }}
+      </div>
+      <div class="col-md-3">
+        <label class="form-label small fw-semibold">International Journals</label>
+        {{ form.international_journals }}
+      </div>
+    </div>
+
+    <div class="row mb-4">
+      <div class="col-md-4">
+        <label class="form-label small fw-semibold">Specialized Laboratories</label>
+        {{ form.total_laboratories }}
+      </div>
+      <div class="col-md-4">
+        <label class="form-label small fw-semibold">Student Computing Nodes</label>
+        {{ form.computer_terminals }}
+      </div>
+      <div class="col-md-4">
+        <label class="form-label small fw-semibold">Internet Bandwidth (Mbps)</label>
+        {{ form.internet_bandwidth_mbps }}
+      </div>
+    </div>
+
+    <div class="form-check mb-4">
+      {{ form.digital_library_available }}
+      <label class="form-check-label fw-semibold" for="{{ form.digital_library_available.id_for_label }}">
+        Digital Library facility with DELNET / National Digital Library subscription operational
+      </label>
+    </div>
+
+    <div class="d-flex justify-content-end gap-2 pt-3 border-top">
+      <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary">Cancel</a>
+      <button type="submit" class="btn btn-primary px-4 fw-semibold">Save Profile Changes</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

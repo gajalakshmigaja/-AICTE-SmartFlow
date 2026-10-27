@@ -1,0 +1,141 @@
+{% extends 'base.html' %}
+
+{% block title %}Faculty Master Register | AICTE SmartFlow{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2">
+  <div>
+    <h3 class="fw-bold mb-1">Faculty Master Register</h3>
+    <p class="text-muted small mb-0">{{ institution.name }} &bull; Teaching faculty members declared for cadre & SFR compliance.</p>
+  </div>
+  <a href="{% url 'institution_profile' %}" class="btn btn-outline-secondary">
+    <i class="bi bi-arrow-left me-1"></i> Campus Profile
+  </a>
+</div>
+
+<div class="row g-4">
+  <!-- Left Column: Add Faculty Form -->
+  <div class="col-lg-5">
+    <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+      <h5 class="fw-bold mb-3 text-primary"><i class="bi bi-person-plus me-2"></i>{% if editing_faculty %}Edit Faculty Member{% else %}Add Faculty Member{% endif %}</h5>
+      <form method="post">
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+        {% if form.errors %}
+          <div class="alert alert-danger">Please correct the highlighted faculty details.</div>
+        {% endif %}
+
+        <div class="mb-3">
+          <label class="form-label small fw-semibold">Full Name *</label>
+          {{ form.name }}
+          {{ form.name.errors }}
+        </div>
+
+        <div class="row mb-3">
+          <div class="col-md-6">
+            <label class="form-label small fw-semibold">Designation *</label>
+            {{ form.designation }}
+            {{ form.designation.errors }}
+          </div>
+          <div class="col-md-6">
+            <label class="form-label small fw-semibold">Department *</label>
+            {{ form.department }}
+            {{ form.department.errors }}
+          </div>
+        </div>
+
+        <div class="row mb-3">
+          <div class="col-md-6">
+            <label class="form-label small fw-semibold">Highest Qualification *</label>
+            {{ form.highest_qualification }}
+            {{ form.highest_qualification.errors }}
+          </div>
+          <div class="col-md-6">
+            <label class="form-label small fw-semibold">Date of Joining</label>
+            {{ form.date_of_joining }}
+            {{ form.date_of_joining.errors }}
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label small fw-semibold">PAN Reference (Masked)</label>
+          {{ form.pan_masked }}
+          {{ form.pan_masked.errors }}
+        </div>
+
+        <div class="form-check mb-4">
+          {{ form.is_phd }}
+          <label class="form-check-label fw-semibold" for="{{ form.is_phd.id_for_label }}">
+            Holds Ph.D. degree from a recognized university
+          </label>
+        </div>
+
+        <button type="submit" class="btn btn-primary w-100 fw-semibold">
+          <i class="bi bi-check-lg me-1"></i> {% if editing_faculty %}Save Faculty Changes{% else %}Register Faculty Member{% endif %}
+        </button>
+        {% if editing_faculty %}
+          <a href="{% url 'manage_faculty' %}" class="btn btn-link w-100 mt-2">Cancel editing</a>
+        {% endif %}
+      </form>
+    </div>
+  </div>
+
+  <!-- Right Column: Faculty List Table -->
+  <div class="col-lg-7">
+    <div class="card border-0 shadow-sm rounded-4 bg-white">
+      <div class="card-header bg-transparent py-3 px-4 d-flex justify-content-between align-items-center border-bottom">
+        <h5 class="fw-bold mb-0">Registered Faculty Members</h5>
+        <span class="badge bg-light text-dark border">{{ faculty_list.count }} Faculty</span>
+      </div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+              <tr>
+                <th class="ps-4">Faculty Name</th>
+                <th>Designation / Dept</th>
+                <th>Qualification</th>
+                <th class="text-end pe-4">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for faculty in faculty_list %}
+                <tr>
+                  <td class="ps-4">
+                    <div class="fw-bold text-dark">{{ faculty.name }}</div>
+                    {% if faculty.is_phd %}
+                      <span class="badge bg-success-subtle text-success" style="font-size:0.7rem;">Ph.D. Qualified</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    <div>{{ faculty.get_designation_display }}</div>
+                    <div class="small text-muted">{{ faculty.department }}</div>
+                  </td>
+                  <td class="small">{{ faculty.highest_qualification }}</td>
+                  <td class="text-end pe-4">
+                    <a href="{% url 'edit_faculty' faculty.id %}" class="btn btn-sm btn-outline-primary" title="Edit Faculty Member">
+                      <i class="bi bi-pencil"></i>
+                    </a>
+                    <form method="post" action="{% url 'delete_faculty' faculty.id %}" style="display:inline;">
+                      {% csrf_token %}
+                      <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Remove faculty: {{ faculty.name }}?');">
+                        <i class="bi bi-trash"></i>
+                      </button>
+                    </form>
+                  </td>
+                </tr>
+              {% empty %}
+                <tr>
+                  <td colspan="4" class="text-center py-4 text-muted">
+                    No faculty members added yet. Add regular teaching faculty to satisfy Student-to-Faculty compliance.
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
