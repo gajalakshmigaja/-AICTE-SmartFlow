@@ -33,9 +33,13 @@ DEBUG = config("DEBUG", default=True, cast=bool)
 ALLOWED_HOSTS = config(
     "ALLOWED_HOSTS",
     default="localhost,127.0.0.1",
-    cast=lambda value: [host.strip() for host in value.split(",")]
+    cast=lambda value: [host.strip() for host in value.split(",") if host.strip()]
 )
 
+render_hostname = config("RENDER_EXTERNAL_HOSTNAME", default="")
+
+if render_hostname and render_hostname not in ALLOWED_HOSTS:
+    ALLOWED_HOSTS.append(render_hostname)
 # Application definition
 
 INSTALLED_APPS = [
